@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#065f46" />
+  <title>Rapor Ciri Khusus & Fast Track Tahfidz</title>
+  <link rel="manifest" href="./manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+    .tab-active { background-color: #065f46; color: #ffffff; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body class="text-slate-800 pb-24">
+
+  <!-- TOP NAVBAR -->
+  <header class="bg-emerald-900 text-white sticky top-0 z-40 shadow-md no-print">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-emerald-950 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">PWA Ready</span>
+            <span id="modeBadge" class="bg-emerald-700 text-emerald-100 text-[10px] font-semibold px-2 py-0.5 rounded">Mode Uji Coba (Lokal)</span>
+          </div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight mt-0.5">Rapor Ciri Khusus & Tahfidz</h1>
+        </div>
+        <button id="btnInstallPWA" onclick="installPWA()" class="hidden bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold px-3 py-1.5 rounded-lg shadow">
+          + Install App
+        </button>
+      </div>
+
+      <!-- SELECTOR SEKOLAH & PENGAMPU -->
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <select id="selectSchool" onchange="handleSchoolChange()" class="bg-emerald-800 border border-emerald-700 text-white rounded-lg px-2.5 py-1.5 font-medium focus:outline-none">
+        </select>
+        <select id="selectTeacher" onchange="handleTeacherChange()" class="bg-emerald-800 border border-emerald-700 text-white rounded-lg px-2.5 py-1.5 font-medium focus:outline-none">
+        </select>
+      </div>
+    </div>
+
+    <!-- FILTER KELAS PENGAMPU -->
+    <div class="bg-emerald-950/60 border-t border-emerald-800">
+      <div class="max-w-5xl mx-auto px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <span class="text-[11px] text-emerald-200 font-semibold whitespace-nowrap">Kelas Diampu:</span>
+        <div id="classPills" class="flex items-center gap-1.5"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-5xl mx-auto px-4 pt-4">
+
+    <!-- NAVIGATION TABS -->
+    <nav class="grid grid-cols-4 gap-1.5 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 mb-4 no-print">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-active py-2 px-2 rounded-lg text-xs sm:text-sm font-bold transition">📊 Progres</button>
+      <button onclick="switchTab('input')" id="tab-input" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">✍️ Input Nilai</button>
+      <button onclick="switchTab('rapor')" id="tab-rapor" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">📄 Cetak Rapor</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">⚙️ Master</button>
+    </nav>
+
+    <!-- ==================== TAB 1: DASHBOARD & FAST TRACK ==================== -->
+    <section id="view-dashboard" class="space-y-4">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-medium">Total Siswa Kelas</div>
+          <div id="statTotalStudents" class="text-2xl font-extrabold text-slate-800 mt-1">0</div>
+          <div id="statProgramLabel" class="text-[11px] font-semibold text-emerald-700 mt-0.5">-</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-medium">Progres Nilai Masuk</div>
+          <div id="statCompletion" class="text-2xl font-extrabold text-emerald-700 mt-1">0%</div>
+          <div id="statCompletionSub" class="text-[11px] text-slate-500 mt-0.5">0 dari 0 siswa</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-medium">Rata-rata Tahfidz</div>
+          <div id="statAvgTahfidz" class="text-2xl font-extrabold text-amber-600 mt-1">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Capaian setoran</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-medium">Wali Kelas</div>
+          <div id="statHomeroom" class="text-xs font-bold text-slate-800 mt-1.5 line-clamp-2">-</div>
+          <div id="statHomeroomNbm" class="text-[10px] text-slate-500 mt-0.5">-</div>
+        </div>
+      </div>
+
+      <!-- FAST TRACK MONITORING -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="font-bold text-slate-800 text-sm sm:text-base">Fast Track Capaian Ngaji Ummi & Hafalan Siswa</h2>
+            <p class="text-xs text-slate-500">Pantau posisi jilid Ummi dan target hafalan tiap anak secara cepat.</p>
+          </div>
+          <button onclick="exportClassExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm">
+            📥 Download Leger Excel (.xlsx)
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
+                <th class="p-3">Nama Siswa</th>
+                <th class="p-3">Grade Ummi</th>
+                <th class="p-3">Capaian Hafalan</th>
+                <th class="p-3 text-center">Status Nilai</th>
+                <th class="p-3 text-right">Aksi Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="fastTrackTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: INPUT NILAI & IMPORT EXCEL ==================== -->
+    <section id="view-input" class="hidden space-y-4">
+      <!-- BULK EXCEL BAR -->
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-xs font-bold text-emerald-900">Input Massal via Excel (.xlsx)</h3>
+          <p class="text-[11px] text-emerald-700">Unduh template kelas ini, isi nilai secara offline, lalu unggah kembali.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="downloadExcelTemplate()" class="bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-bold px-3 py-1.5 rounded-lg">
+            📄 Template Excel
+          </button>
+          <label class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer">
+            📤 Upload Excel
+            <input type="file" id="excelUploadInput" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+
+      <!-- PILIH SISWA UNTUK INPUT SATUAN -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div class="w-full sm:w-2/3">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Pilih Siswa untuk Dicicil / Edit Nilai:</label>
+            <select id="selectStudentInput" onchange="loadStudentForm()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-600"></select>
+          </div>
+          <div class="flex items-center gap-1.5 self-end">
+            <button onclick="navigateStudent(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◀ Seb</button>
+            <button onclick="navigateStudent(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">Ber ▶</button>
+          </div>
+        </div>
+
+        <!-- FORM DINAMIS SISWA -->
+        <form id="studentScoreForm" onsubmit="saveCurrentStudent(event)" class="space-y-5">
+          <!-- 1. GRADE UMMI & BACAAN -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Grade Ngaji Ummi</label>
+              <select id="inpUmmiGrade" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-semibold">
+                <option value="Jilid 1">Jilid 1</option>
+                <option value="Jilid 2">Jilid 2</option>
+                <option value="Jilid 3">Jilid 3</option>
+                <option value="Jilid 4">Jilid 4</option>
+                <option value="Jilid 5">Jilid 5</option>
+                <option value="Jilid 6">Jilid 6</option>
+                <option value="Tajwid">Tajwid</option>
+                <option value="Ghorib">Ghorib</option>
+                <option value="Tilawah Al-Qur'an">Tilawah Al-Qur'an</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan Bacaan / Target Ayat</label>
+              <input type="text" id="inpTilawahTarget" placeholder="Misal: Tilawah atau Q.S Thaha 1-9" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Nilai Bacaan / Tilawah (Angka)</label>
+              <div class="flex items-center gap-2">
+                <input type="number" min="0" max="100" id="inpTilawahScore" oninput="updateLiveHelper('inpTilawahScore','helpTilawah')" class="w-24 bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm font-bold text-center" />
+                <span id="helpTilawah" class="text-[11px] font-semibold text-emerald-700">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. HAFALAN AL-QUR'AN (BARIS DINAMIS PER ANAK) -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-extrabold text-emerald-900 uppercase">Capaian Hafalan Al-Qur'an (Dinamis Per Anak)</label>
+              <button type="button" onclick="addTahfidzRow()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg">
+                + Tambah Surat/Juz
+              </button>
+            </div>
+            <div id="tahfidzRowsContainer" class="space-y-2"></div>
+          </div>
+
+          <!-- 3. DO'A SEHARI-HARI & HADITS -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-extrabold text-emerald-900 uppercase">Do'a Sehari-hari & Hadits</label>
+              <button type="button" onclick="addDoaRow()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold px-2.5 py-1 rounded-lg">
+                + Tambah Doa/Hadits
+              </button>
+            </div>
+            <div id="doaRowsContainer" class="space-y-2"></div>
+          </div>
+
+          <!-- 4. MAPEL CIRI KHUSUS -->
+          <div class="space-y-2">
+            <label class="text-xs font-extrabold text-emerald-900 uppercase">Mapel Ciri Khusus</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <span class="block text-[11px] font-bold text-slate-600 mb-1">Pendidikan Kemuhammadiyahan</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" min="0" max="100" id="inpKemuh" oninput="updateLiveHelper('inpKemuh','helpKemuh')" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center" />
+                  <span id="helpKemuh" class="text-[10px] font-semibold text-slate-600">-</span>
+                </div>
+              </div>
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <span class="block text-[11px] font-bold text-slate-600 mb-1">Bahasa Arab</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" min="0" max="100" id="inpBArab" oninput="updateLiveHelper('inpBArab','helpBArab')" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center" />
+                  <span id="helpBArab" class="text-[10px] font-semibold text-slate-600">-</span>
+                </div>
+              </div>
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <span class="block text-[11px] font-bold text-slate-600 mb-1">MULAQU</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" min="0" max="100" id="inpMulaqu" oninput="updateLiveHelper('inpMulaqu','helpMulaqu')" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center" />
+                  <span id="helpMulaqu" class="text-[10px] font-semibold text-slate-600">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. KHUSUS PROGRAM ICP: ENGLISH LEARNING REPORT -->
+          <div id="icpSectionBox" class="hidden space-y-3 bg-indigo-50/70 border border-indigo-200 p-3.5 rounded-xl">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-indigo-900 uppercase">🇬🇧 ICP English Learning Report (Khusus Kelas ICP)</span>
+              <span class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">Auto Grading System</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-950 mb-1">Vocabulary</label>
+                <input type="number" min="0" max="100" id="inpIcpVocab" class="w-full bg-white border border-indigo-200 rounded px-2 py-1.5 text-sm font-bold" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-950 mb-1">Listening Skill</label>
+                <input type="number" min="0" max="100" id="inpIcpListen" class="w-full bg-white border border-indigo-200 rounded px-2 py-1.5 text-sm font-bold" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-950 mb-1">Speaking Skill</label>
+                <input type="number" min="0" max="100" id="inpIcpSpeak" class="w-full bg-white border border-indigo-200 rounded px-2 py-1.5 text-sm font-bold" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-950 mb-1">Reading Skill</label>
+                <input type="number" min="0" max="100" id="inpIcpRead" class="w-full bg-white border border-indigo-200 rounded px-2 py-1.5 text-sm font-bold" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-indigo-950 mb-1">Feedback and Remarks (English)</label>
+              <textarea id="inpIcpRemarks" rows="2" class="w-full bg-white border border-indigo-200 rounded p-2 text-xs"></textarea>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button type="submit" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow">
+              💾 Simpan Capaian Siswa
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: PREVIEW & EXPORT RAPOR ==================== -->
+    <section id="view-rapor" class="hidden space-y-4">
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="selectStudentRapor" onchange="renderRaporPreview()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold"></select>
+          <select id="selectRaporType" onchange="renderRaporPreview()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold text-emerald-800">
+            <option value="cirikhusus">Rapor Ciri Khusus / Tahfidz</option>
+            <option value="icp_english">Student Learning Report (ICP English)</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportWordSingle()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg">
+            📝 Word (1 Siswa)
+          </button>
+          <button onclick="exportWordAllClass()" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-3 py-2 rounded-lg">
+            📚 Word (1 Kelas Gabungan)
+          </button>
+        </div>
+      </div>
+
+      <!-- AREA PREVIEW DOKUMEN RAPOR -->
+      <div id="raporPreviewContainer" class="bg-white p-6 sm:p-10 rounded-xl border border-slate-300 shadow-sm max-w-3xl mx-auto overflow-x-auto">
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: PENGATURAN & BACKUP ==================== -->
+    <section id="view-settings" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm text-slate-800">Profil Kepala Sekolah & Unit Sekolah</h3>
+        <div id="schoolSettingsList" class="space-y-3"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm text-slate-800">Tambah Siswa Baru ke Kelas Aktif</h3>
+        <div class="flex gap-2">
+          <input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
+          <button onclick="addNewStudent()" class="bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah</button>
+        </div>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
+        <h3 class="font-bold text-xs text-amber-900 uppercase">Cadangkan / Pindah Data Uji Coba GitHub (JSON)</h3>
+        <p class="text-[11px] text-amber-800">Karena GitHub Pages menyimpan data di browser HP/Laptop masing-masing, gunakan tombol ini untuk memindahkan data antar perangkat sebelum migrasi ke Hostinger.</p>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button onclick="downloadBackupJSON()" class="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">⬇️ Download Backup JSON</button>
+          <label class="bg-white border border-amber-400 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer">
+            ⬆️ Restore Backup JSON
+            <input type="file" accept=".json" onchange="restoreBackupJSON(event)" class="hidden" />
+          </label>
+          <button onclick="resetDemoData()" class="bg-red-100 text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg ml-auto">Reset Data Awal</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // KONFIGURASI HYBRID MODE (GITHUB PAGES vs HOSTINGER MYSQL)
+    // =========================================================================
+    const APP_CONFIG = {
+      USE_API: false, // Ubah ke true saat sudah di-upload ke Hostinger bersama api.php
+      API_URL: './api.php',
+      STORAGE_KEY: 'rapor_muh_temanggung_v1'
+    };
+
+    // =========================================================================
+    // DATA AWAL (SEEDER SESUAI SAMPEL SD MUHAMMADIYAH TEMANGGUNG & SD MUH 1)
+    // =========================================================================
+    const DEFAULT_DB = {
+      schools: [
+        { id: 1, name: 'SD Muhammadiyah Temanggung', address: 'Jl. Mujahidin No. 26 Temanggung Telp. (0293) 492635', principal: 'Triana Widiastuti, S.Pd.', principalNbm: '1.355.255' },
+        { id: 2, name: 'SD Muhammadiyah 1 Temanggung', address: 'Temanggung, Jawa Tengah', principal: 'Kepala Sekolah SD Muh 1 Temanggung', principalNbm: '1.400.112' }
+      ],
+      teachers: [
+        { id: 2, schoolId: 1, name: 'Purwati, S.I.Pust', nbm: '1.372.967' },
+        { id: 3, schoolId: 1, name: 'Fatia Isnani, S.Pd.I.', nbm: '' },
+        { id: 4, schoolId: 2, name: 'Ustadz Ahmad Fauzi, S.Pd.I.', nbm: '1.410.223' }
+      ],
+      classes: [
+        { id: 1, schoolId: 1, grade: 6, name: 'VI YAHYA', program: 'Multi Talent', homeroom: 'Ika Cahya Siskiana Wiyanti, S.Pd', homeroomNbm: '1.372.974', teacherId: 2, semester: 'II', year: '2025/2026', date: 'Temanggung, 30 Mei 2026' },
+        { id: 2, schoolId: 1, grade: 2, name: '2 ISMAIL', program: 'ICP', homeroom: 'Henny Widhi Astuti, S.Pd.', homeroomNbm: '1.054.099', teacherId: 2, semester: 'II', year: '2025/2026', date: 'Temanggung, 20 Juni 2026' },
+        { id: 3, schoolId: 1, grade: 6, name: 'VI IBNU KHALDUN', program: 'Tahfidz', homeroom: 'Muhlishin, S.Pd.', homeroomNbm: '', teacherId: 3, semester: 'II', year: '2025/2026', date: 'Temanggung, 30 Mei 2026' },
+        { id: 4, schoolId: 2, grade: 5, name: 'V AL-FATIH', program: 'Tahfidz', homeroom: 'Siti Aminah, S.Pd.', homeroomNbm: '1.390.111', teacherId: 4, semester: 'II', year: '2025/2026', date: 'Temanggung, 30 Mei 2026' }
+      ],
+      students: [
+        {
+          id: 101, schoolId: 1, classId: 1, name: 'Abisatya Putra Dewangga', ummiGrade: 'Tilawah Al-Qur\'an',
+          tilawahTarget: 'Tilawah', tilawahScore: 73, kemuh: 78, barab: 77, mulaqu: 79,
+          doaList: [{ title: 'Al Ma’tsurat', score: 94 }],
+          tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 98 }],
+          icp: null
+        },
+        {
+          id: 102, schoolId: 1, classId: 1, name: 'Nadhifa Firza Khairani Hidayat', ummiGrade: 'Tilawah Al-Qur\'an',
+          tilawahTarget: 'Tilawah', tilawahScore: 86, kemuh: 82, barab: 81, mulaqu: 85,
+          doaList: [{ title: 'Al Ma’tsurat', score: 87 }],
+          tahfidzList: [
+            { juzGroup: '', surah: 'Juz 30', score: 97 },
+            { juzGroup: '', surah: 'Al Mulk', score: 90 },
+            { juzGroup: '', surah: 'Al Qalam', score: 90 },
+            { juzGroup: '', surah: 'Al Haqqah', score: 92 },
+            { juzGroup: '', surah: 'Al Maarij', score: 87 }
+          ],
+          icp: null
+        },
+        {
+          id: 103, schoolId: 1, classId: 1, name: 'Ajeng Indah Nur Pramesti', ummiGrade: 'Jilid 6',
+          tilawahTarget: 'Tilawah', tilawahScore: 70, kemuh: 78, barab: 70, mulaqu: 74,
+          doaList: [{ title: 'Al Ma’tsurat', score: 78 }],
+          tahfidzList: [{ juzGroup: '', surah: '¼ Juz 30', score: 70 }],
+          icp: null
+        },
+        {
+          id: 201, schoolId: 1, classId: 2, name: 'Agnaa Aulia Matahari', ummiGrade: 'Jilid 5',
+          tilawahTarget: 'Tilawah', tilawahScore: 88, kemuh: 90, barab: 89, mulaqu: 91,
+          doaList: [{ title: 'Doa Harian Kelas 2', score: 92 }],
+          tahfidzList: [{ juzGroup: '', surah: 'Juz 30 (An-Naba - Ad-Dhuha)', score: 94 }],
+          icp: {
+            vocab: 94, listening: 98, speaking: 97, reading: 97,
+            remarks: 'The student has shown outstanding English skills this semester. The student is highly active in class, expresses ideas clearly, and grasps new concepts quickly. Keep up the excellent work.'
+          }
+        },
+        {
+          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: 'Tilawah Al-Qur\'an',
+          tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 91, barab: 91, mulaqu: 95,
+          doaList: [{ title: '1. Al Ma’tsurat', score: 98 }],
+          tahfidzList: [{ juzGroup: 'Juz 1', surah: 'Q.S Al Baqarah ayat 85 - 93', score: 85 }],
+          icp: null
+        },
+        {
+          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: 'Tilawah Al-Qur\'an',
+          tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 88, barab: 92, mulaqu: 95,
+          doaList: [
+            { title: '1. Al Ma’tsurat', score: 98 },
+            { title: '6. Larangan sombong', score: 95 }
+          ],
+          tahfidzList: [{ juzGroup: 'Juz 3', surah: '1. Q.S Al Baqarah 265', score: 85 }],
+          icp: null
+        },
+        {
+          id: 401, schoolId: 2, classId: 4, name: 'Muhammad Zayd Al-Ghifari', ummiGrade: 'Tajwid',
+          tilawahTarget: 'Q.S Al-Mulk 1-15', tilawahScore: 89, kemuh: 86, barab: 88, mulaqu: 90,
+          doaList: [{ title: '1. Doa Sholat Dhuha', score: 94 }],
+          tahfidzList: [{ juzGroup: 'Juz 29', surah: '1. Q.S Al-Mulk 1-30', score: 92 }],
+          icp: null
+        }
+      ]
+    };
+
+    let db = JSON.parse(localStorage.getItem(APP_CONFIG.STORAGE_KEY)) || structuredClone(DEFAULT_DB);
+    let state = {
+      schoolId: 1,
+      teacherId: 2,
+      classId: 1,
+      studentId: 101,
+      activeTab: 'dashboard'
+    };
+
+    function saveDB() {
+      localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(db));
+    }
+
+    // =========================================================================
+    // HELPER OTOMATISASI NILAI TERBILANG & PREDIKAT
+    // =========================================================================
+    function angkaKeTerbilang(n) {
+      if (n === null || n === undefined || n === '') return '-';
+      n = parseInt(n, 10);
+      if (isNaN(n)) return '-';
+      const satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+      function conv(x) {
+        if (x < 12) return satuan[x];
+        if (x < 20) return conv(x - 10) + ' belas';
+        if (x < 100) return conv(Math.floor(x / 10)) + ' puluh' + (x % 10 !== 0 ? ' ' + conv(x % 10).toLowerCase() : '');
+        if (x === 100) return 'Seratus';
+        return String(x);
+      }
+      return n === 0 ? 'Nol' : conv(n);
+    }
+
+    function getPredikat(n) {
+      if (n === null || n === undefined || n === '') return '-';
+      n = parseInt(n, 10);
+      if (n >= 91) return 'A';
+      if (n >= 84) return 'B+';
+      if (n >= 77) return 'B';
+      if (n >= 70) return 'B-';
+      return 'C';
+    }
+
+    function getIcpGradeLabel(n) {
+      n = parseInt(n, 10) || 0;
+      if (n >= 95) return 'Excellent';
+      if (n >= 90) return 'Outstanding';
+      if (n >= 80) return 'Very Good';
+      return 'Good';
+    }
+
+    function getIcpSkillDesc(skill, n) {
+      n = parseInt(n, 10) || 0;
+      const map = {
+        vocab: n >= 95 ? 'The student knows many basic English words. The student can remember new words and phrases easily. The student uses vocabulary correctly.' : 'The student understands basic vocabulary. The student can recognize familiar words and phrases. The student uses vocabulary with small help.',
+        listening: n >= 95 ? 'The student understands instructions very well. The student can recognize numbers, objects, and activities correctly. The student listens carefully.' : 'The student understands most instructions. The student can recognize numbers, objects, and activities. The student shows good listening skills.',
+        speaking: n >= 95 ? 'The student can answer simple questions clearly. The student speaks confidently. The student speaks without teacher help.' : 'The student can answer simple questions well. The student speaks clearly. The student needs little teacher help.',
+        reading: n >= 95 ? 'The student can read a text well. The student can recognize simple sentences. The student can answer yes/no questions correctly.' : 'The student can read a text clearly. The student can recognize sentences. The student can answer yes/no questions well.'
+      };
+      return map[skill];
+    }
+
+    // =========================================================================
+    // NAVIGASI & RENDER SELECTOR
+    // =========================================================================
+    function initSelectors() {
+      const selSchool = document.getElementById('selectSchool');
+      selSchool.innerHTML = db.schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      selSchool.value = state.schoolId;
+
+      const teachersInSchool = db.teachers.filter(t => t.schoolId === state.schoolId);
+      if (!teachersInSchool.some(t => t.id === state.teacherId)) {
+        state.teacherId = teachersInSchool[0]?.id || 0;
+      }
+      const selTeacher = document.getElementById('selectTeacher');
+      selTeacher.innerHTML = teachersInSchool.map(t => `<option value="${t.id}">Pengampu: ${t.name}</option>`).join('');
+      selTeacher.value = state.teacherId;
+
+      const classesForTeacher = db.classes.filter(c => c.schoolId === state.schoolId && c.teacherId === state.teacherId);
+      if (!classesForTeacher.some(c => c.id === state.classId)) {
+        state.classId = classesForTeacher[0]?.id || 0;
+      }
+
+      const pills = document.getElementById('classPills');
+      pills.innerHTML = classesForTeacher.map(c => {
+        const active = c.id === state.classId;
+        return `<button onclick="selectClass(${c.id})" class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition ${active ? 'bg-amber-400 text-emerald-950' : 'bg-emerald-800 text-emerald-100 hover:bg-emerald-700'}">
+          ${c.name} (${c.program})
+        </button>`;
+      }).join('');
+
+      const classStudents = db.students.filter(s => s.classId === state.classId);
+      if (!classStudents.some(s => s.id === state.studentId)) {
+        state.studentId = classStudents[0]?.id || 0;
+      }
+
+      const studentOptions = classStudents.map((s, i) => `<option value="${s.id}">${i + 1}. ${s.name}</option>`).join('');
+      document.getElementById('selectStudentInput').innerHTML = studentOptions;
+      document.getElementById('selectStudentInput').value = state.studentId;
+      document.getElementById('selectStudentRapor').innerHTML = studentOptions;
+      document.getElementById('selectStudentRapor').value = state.studentId;
+
+      renderAllViews();
+    }
+
+    function handleSchoolChange() {
+      state.schoolId = parseInt(document.getElementById('selectSchool').value, 10);
+      initSelectors();
+    }
+
+    function handleTeacherChange() {
+      state.teacherId = parseInt(document.getElementById('selectTeacher').value, 10);
+      initSelectors();
+    }
+
+    function selectClass(cid) {
+      state.classId = cid;
+      initSelectors();
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      ['dashboard', 'input', 'rapor', 'settings'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-${t}`);
+        btn.className = t === tab
+          ? 'tab-active py-2 px-2 rounded-lg text-xs sm:text-sm font-bold transition'
+          : 'py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition';
+      });
+      renderAllViews();
+    }
+
+    function renderAllViews() {
+      renderDashboard();
+      loadStudentForm();
+      renderRaporPreview();
+      renderSettings();
+    }
+
+    // =========================================================================
+    // TAB 1: DASHBOARD & FAST TRACK
+    // =========================================================================
+    function renderDashboard() {
+      const cls = db.classes.find(c => c.id === state.classId);
+      const students = db.students.filter(s => s.classId === state.classId);
+      if (!cls) return;
+
+      document.getElementById('statTotalStudents').textContent = students.length;
+      document.getElementById('statProgramLabel').textContent = `Program ${cls.program}`;
+      document.getElementById('statHomeroom').textContent = cls.homeroom;
+      document.getElementById('statHomeroomNbm').textContent = cls.homeroomNbm ? `NBM. ${cls.homeroomNbm}` : 'Wali Kelas';
+
+      let completed = 0;
+      let totalTahfidz = 0;
+      let countTahfidz = 0;
+
+      students.forEach(s => {
+        const hasScores = s.tilawahScore !== null && s.tahfidzList.length > 0 && s.kemuh !== null;
+        if (hasScores) completed++;
+        s.tahfidzList.forEach(t => {
+          if (t.score) { totalTahfidz += parseInt(t.score, 10); countTahfidz++; }
+        });
+      });
+
+      const pct = students.length ? Math.round((completed / students.length) * 100) : 0;
+      document.getElementById('statCompletion').textContent = `${pct}%`;
+      document.getElementById('statCompletionSub').textContent = `${completed} dari ${students.length} siswa lengkap`;
+      document.getElementById('statAvgTahfidz').textContent = countTahfidz ? (totalTahfidz / countTahfidz).toFixed(1) : '0';
+
+      const tbody = document.getElementById('fastTrackTableBody');
+      tbody.innerHTML = students.map(s => {
+        const isDone = s.tilawahScore !== null && s.tahfidzList.length > 0;
+        const hafalanSummary = s.tahfidzList.map(t => `${t.juzGroup ? t.juzGroup + ': ' : ''}${t.surah} (${t.score})`).join(', ') || '<span class="text-slate-400 italic">Belum ada setoran</span>';
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-800">${s.name}</td>
+            <td class="p-3"><span class="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[11px]">${s.ummiGrade}</span></td>
+            <td class="p-3 text-slate-600">${hafalanSummary}</td>
+            <td class="p-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'}">
+                ${isDone ? 'Lengkap' : 'Belum Lengkap'}
+              </span>
+            </td>
+            <td class="p-3 text-right">
+              <button onclick="jumpToEdit(${s.id})" class="text-emerald-700 hover:underline font-bold">Input ➔</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function jumpToEdit(sid) {
+      state.studentId = sid;
+      document.getElementById('selectStudentInput').value = sid;
+      switchTab('input');
+    }
+
+    // =========================================================================
+    // TAB 2: FORM INPUT DINAMIS PER SISWA
+    // =========================================================================
+    function updateLiveHelper(inpId, helpId) {
+      const val = document.getElementById(inpId).value;
+      document.getElementById(helpId).textContent = val !== '' ? `${angkaKeTerbilang(val)} (${getPredikat(val)})` : '-';
+    }
+
+    function loadStudentForm() {
+      const sid = parseInt(document.getElementById('selectStudentInput').value, 10);
+      state.studentId = sid;
+      const st = db.students.find(s => s.id === sid);
+      const cls = db.classes.find(c => c.id === state.classId);
+      if (!st || !cls) return;
+
+      document.getElementById('inpUmmiGrade').value = st.ummiGrade || 'Jilid 1';
+      document.getElementById('inpTilawahTarget').value = st.tilawahTarget || '';
+      document.getElementById('inpTilawahScore').value = st.tilawahScore ?? '';
+      document.getElementById('inpKemuh').value = st.kemuh ?? '';
+      document.getElementById('inpBArab').value = st.barab ?? '';
+      document.getElementById('inpMulaqu').value = st.mulaqu ?? '';
+
+      updateLiveHelper('inpTilawahScore', 'helpTilawah');
+      updateLiveHelper('inpKemuh', 'helpKemuh');
+      updateLiveHelper('inpBArab', 'helpBArab');
+      updateLiveHelper('inpMulaqu', 'helpMulaqu');
+
+      // Render Baris Hafalan Dinamis
+      const tContainer = document.getElementById('tahfidzRowsContainer');
+      tContainer.innerHTML = '';
+      (st.tahfidzList || []).forEach(item => addTahfidzRow(item.juzGroup, item.surah, item.score));
+
+      // Render Baris Doa Dinamis
+      const dContainer = document.getElementById('doaRowsContainer');
+      dContainer.innerHTML = '';
+      (st.doaList || []).forEach(item => addDoaRow(item.title, item.score));
+
+      // Tampilkan Form ICP jika kelas program ICP
+      const icpBox = document.getElementById('icpSectionBox');
+      if (cls.program === 'ICP') {
+        icpBox.classList.remove('hidden');
+        const icp = st.icp || { vocab: 90, listening: 90, speaking: 90, reading: 90, remarks: '' };
+        document.getElementById('inpIcpVocab').value = icp.vocab;
+        document.getElementById('inpIcpListen').value = icp.listening;
+        document.getElementById('inpIcpSpeak').value = icp.speaking;
+        document.getElementById('inpIcpRead').value = icp.reading;
+        document.getElementById('inpIcpRemarks').value = icp.remarks;
+      } else {
+        icpBox.classList.add('hidden');
+      }
+    }
+
+    function addTahfidzRow(juzGroup = '', surah = '', score = '') {
+      const cls = db.classes.find(c => c.id === state.classId);
+      const isTahfidzProgram = cls && cls.program === 'Tahfidz';
+      const div = document.createElement('div');
+      div.className = 'flex flex-wrap sm:flex-nowrap items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 tahfidz-row';
+      div.innerHTML = `
+        ${isTahfidzProgram ? `<input type="text" placeholder="Juz (Mis: Juz 27)" value="${juzGroup}" class="w-28 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold inp-juz" />` : `<input type="hidden" value="" class="inp-juz" />`}
+        <input type="text" placeholder="Target Surat / Ayat (Mis: Juz 30 atau Al Mulk)" value="${surah}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-surah" />
+        <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-center inp-score" />
+        <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:bg-rose-100 px-2 py-1 rounded text-xs font-bold">✕</button>
+      `;
+      document.getElementById('tahfidzRowsContainer').appendChild(div);
+    }
+
+    function addDoaRow(title = '', score = '') {
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 doa-row';
+      div.innerHTML = `
+        <input type="text" placeholder="Nama Doa / Hadits (Mis: Al Ma'tsurat)" value="${title}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-doa-title" />
+        <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-center inp-doa-score" />
+        <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:bg-rose-100 px-2 py-1 rounded text-xs font-bold">✕</button>
+      `;
+      document.getElementById('doaRowsContainer').appendChild(div);
+    }
+
+    function navigateStudent(dir) {
+      const sel = document.getElementById('selectStudentInput');
+      const nextIdx = sel.selectedIndex + dir;
+      if (nextIdx >= 0 && nextIdx < sel.options.length) {
+        sel.selectedIndex = nextIdx;
+        loadStudentForm();
+      }
+    }
+
+    function saveCurrentStudent(e) {
+      e.preventDefault();
+      const st = db.students.find(s => s.id === state.studentId);
+      const cls = db.classes.find(c => c.id === state.classId);
+      if (!st) return;
+
+      st.ummiGrade = document.getElementById('inpUmmiGrade').value;
+      st.tilawahTarget = document.getElementById('inpTilawahTarget').value;
+      const tScore = document.getElementById('inpTilawahScore').value;
+      st.tilawahScore = tScore !== '' ? parseInt(tScore, 10) : null;
+
+      const kScore = document.getElementById('inpKemuh').value;
+      st.kemuh = kScore !== '' ? parseInt(kScore, 10) : null;
+
+      const bScore = document.getElementById('inpBArab').value;
+      st.barab = bScore !== '' ? parseInt(bScore, 10) : null;
+
+      const mScore = document.getElementById('inpMulaqu').value;
+      st.mulaqu = mScore !== '' ? parseInt(mScore, 10) : null;
+
+      st.tahfidzList = Array.from(document.querySelectorAll('.tahfidz-row')).map(row => ({
+        juzGroup: row.querySelector('.inp-juz').value.trim(),
+        surah: row.querySelector('.inp-surah').value.trim(),
+        score: parseInt(row.querySelector('.inp-score').value, 10) || 0
+      })).filter(x => x.surah !== '');
+
+      st.doaList = Array.from(document.querySelectorAll('.doa-row')).map(row => ({
+        title: row.querySelector('.inp-doa-title').value.trim(),
+        score: parseInt(row.querySelector('.inp-doa-score').value, 10) || 0
+      })).filter(x => x.title !== '');
+
+      if (cls.program === 'ICP') {
+        st.icp = {
+          vocab: parseInt(document.getElementById('inpIcpVocab').value, 10) || 0,
+          listening: parseInt(document.getElementById('inpIcpListen').value, 10) || 0,
+          speaking: parseInt(document.getElementById('inpIcpSpeak').value, 10) || 0,
+          reading: parseInt(document.getElementById('inpIcpRead').value, 10) || 0,
+          remarks: document.getElementById('inpIcpRemarks').value.trim()
+        };
+      }
+
+      saveDB();
+      alert(`✅ Capaian ${st.name} berhasil disimpan!`);
+      renderDashboard();
+    }
+
+    // =========================================================================
+    // IMPORT & EXPORT EXCEL (.XLSX)
+    // =========================================================================
+    function downloadExcelTemplate() {
+      const cls = db.classes.find(c => c.id === state.classId);
+      const students = db.students.filter(s => s.classId === state.classId);
+      const rows = students.map(s => ({
+        ID_SISWA: s.id,
+        NAMA_SISWA: s.name,
+        GRADE_UMMI: s.ummiGrade,
+        TARGET_BACAAN: s.tilawahTarget,
+        NILAI_TILAWAH: s.tilawahScore ?? '',
+        DOA_HADITS: s.doaList[0]?.title || 'Al Ma’tsurat',
+        NILAI_DOA: s.doaList[0]?.score ?? '',
+        HAFALAN_UTAMA: s.tahfidzList[0]?.surah || 'Juz 30',
+        NILAI_HAFALAN: s.tahfidzList[0]?.score ?? '',
+        KEMUHAMMADIYAHAN: s.kemuh ?? '',
+        BAHASA_ARAB: s.barab ?? '',
+        MULAQU: s.mulaqu ?? ''
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, cls.name);
+      XLSX.writeFile(wb, `Template_Nilai_${cls.name.replace(/\s+/g, '_')}.xlsx`);
+    }
+
+    function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        let updated = 0;
+
+        rows.forEach(r => {
+          const st = db.students.find(s => s.id === parseInt(r.ID_SISWA, 10));
+          if (st) {
+            if (r.GRADE_UMMI) st.ummiGrade = String(r.GRADE_UMMI);
+            if (r.TARGET_BACAAN) st.tilawahTarget = String(r.TARGET_BACAAN);
+            if (r.NILAI_TILAWAH !== '' && r.NILAI_TILAWAH !== undefined) st.tilawahScore = parseInt(r.NILAI_TILAWAH, 10);
+            if (r.KEMUHAMMADIYAHAN !== '' && r.KEMUHAMMADIYAHAN !== undefined) st.kemuh = parseInt(r.KEMUHAMMADIYAHAN, 10);
+            if (r.BAHASA_ARAB !== '' && r.BAHASA_ARAB !== undefined) st.barab = parseInt(r.BAHASA_ARAB, 10);
+            if (r.MULAQU !== '' && r.MULAQU !== undefined) st.mulaqu = parseInt(r.MULAQU, 10);
+            if (r.DOA_HADITS && r.NILAI_DOA !== '') {
+              st.doaList = [{ title: String(r.DOA_HADITS), score: parseInt(r.NILAI_DOA, 10) }];
+            }
+            if (r.HAFALAN_UTAMA && r.NILAI_HAFALAN !== '') {
+              st.tahfidzList = [{ juzGroup: '', surah: String(r.HAFALAN_UTAMA), score: parseInt(r.NILAI_HAFALAN, 10) }];
+            }
+            updated++;
+          }
+        });
+
+        saveDB();
+        renderAllViews();
+        alert(`✅ Berhasil mengimpor nilai untuk ${updated} siswa dari file Excel!`);
+        event.target.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function exportClassExcel() {
+      const cls = db.classes.find(c => c.id === state.classId);
+      const students = db.students.filter(s => s.classId === state.classId);
+      const rows = students.map((s, idx) => ({
+        NO: idx + 1,
+        NAMA_SISWA: s.name,
+        KELAS: cls.name,
+        PROGRAM: cls.program,
+        GRADE_UMMI: s.ummiGrade,
+        NILAI_TILAWAH: s.tilawahScore ?? '-',
+        PREDIKAT_TILAWAH: getPredikat(s.tilawahScore),
+        CAPAIAN_HAFALAN: s.tahfidzList.map(t => `${t.juzGroup ? t.juzGroup + ' ' : ''}${t.surah} (${t.score})`).join('; '),
+        NILAI_DOA: s.doaList.map(d => `${d.title} (${d.score})`).join('; '),
+        KEMUHAMMADIYAHAN: s.kemuh ?? '-',
+        BAHASA_ARAB: s.barab ?? '-',
+        MULAQU: s.mulaqu ?? '-'
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Leger_Ciri_Khusus');
+      XLSX.writeFile(wb, `Leger_Rapor_${cls.name.replace(/\s+/g, '_')}.xlsx`);
+    }
+
+    // =========================================================================
+    // TAB 3: GENERATOR HTML RAPOR & EKSPOR WORD (.DOC)
+    // =========================================================================
+    function generateStudentRaporHTML(st, cls, school, teacher, type) {
+      if (type === 'icp_english' && cls.program === 'ICP') {
+        const icp = st.icp || { vocab: 90, listening: 90, speaking: 90, reading: 90, remarks: 'Keep up the good work.' };
+        return `
+          <div style="font-family: 'Times New Roman', serif; color: #000; page-break-after: always;">
+            <div style="text-align: center; border-bottom: 3px double #000; padding-bottom: 8px; margin-bottom: 14px;">
+              <div style="font-size: 11pt; font-weight: bold;">MAJELIS PENDIDIKAN DASAR MENENGAH DAN PNF</div>
+              <div style="font-size: 11pt; font-weight: bold;">PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG</div>
+              <div style="font-size: 14pt; font-weight: bold;">${school.name.toUpperCase()}</div>
+              <div style="font-size: 9pt;">Alamat: ${school.address}</div>
+            </div>
+            <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 12px;">
+              STUDENT LEARNING REPORT<br/>INTERNATIONAL CLASS PROGRAM<br/>ACADEMIC YEAR ${cls.year}
+            </div>
+            <table style="width: 100%; font-size: 10.5pt; margin-bottom: 10px; border: none;">
+              <tr><td style="width: 15%;"><strong>Student</strong></td><td style="width: 45%;">: ${st.name}</td><td style="width: 15%;"><strong>Grade</strong></td><td>: ${cls.grade} (${cls.name})</td></tr>
+              <tr><td><strong>Teacher</strong></td><td>: ${cls.homeroom}</td><td><strong>Semester</strong></td><td>: 2nd Semester</td></tr>
+            </table>
+            <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+              <thead style="background: #f1f5f9;">
+                <tr>
+                  <th style="width: 22%;">LEARNING</th>
+                  <th style="width: 48%;">PERFORMANCE SUMMARY</th>
+                  <th style="width: 14%;">QUARTERLY GRADE</th>
+                  <th style="width: 16%;">GRADING SYSTEM</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Vocabulary</strong></td><td>${getIcpSkillDesc('vocab', icp.vocab)}</td><td style="text-align:center; font-weight:bold;">${icp.vocab}</td><td style="text-align:center;">${getIcpGradeLabel(icp.vocab)}</td></tr>
+                <tr><td><strong>Listening Skill</strong></td><td>${getIcpSkillDesc('listening', icp.listening)}</td><td style="text-align:center; font-weight:bold;">${icp.listening}</td><td style="text-align:center;">${getIcpGradeLabel(icp.listening)}</td></tr>
+                <tr><td><strong>Speaking Skill</strong></td><td>${getIcpSkillDesc('speaking', icp.speaking)}</td><td style="text-align:center; font-weight:bold;">${icp.speaking}</td><td style="text-align:center;">${getIcpGradeLabel(icp.speaking)}</td></tr>
+                <tr><td><strong>Reading Readiness</strong></td><td>${getIcpSkillDesc('reading', icp.reading)}</td><td style="text-align:center; font-weight:bold;">${icp.reading}</td><td style="text-align:center;">${getIcpGradeLabel(icp.reading)}</td></tr>
+              </tbody>
+            </table>
+            <div style="border: 1px solid #000; padding: 8px; margin-top: 12px; font-size: 10pt;">
+              <strong>Feedback and Remarks:</strong><br/>${icp.remarks}
+            </div>
+            <table style="width: 100%; margin-top: 24px; font-size: 10.5pt; border: none;">
+              <tr>
+                <td style="width: 50%; text-align: center;">Principal,<br/><br/><br/><br/><u><strong>${school.principal}</strong></u><br/>NBM. ${school.principalNbm}</td>
+                <td style="width: 50%; text-align: center;">${cls.date}<br/>Teacher,<br/><br/><br/><u><strong>${cls.homeroom}</strong></u><br/>NBM. ${cls.homeroomNbm}</td>
+              </tr>
+            </table>
+          </div>
+        `;
+      }
+
+      // FORMAT 2: PROGRAM KHUSUS TAHFIDZ (1 TABEL UTAMA NOMOR 1-4)
+      if (cls.program === 'Tahfidz') {
+        const groupedJuz = {};
+        (st.tahfidzList || []).forEach(t => {
+          const g = t.juzGroup || 'Capaian Hafalan';
+          if (!groupedJuz[g]) groupedJuz[g] = [];
+          groupedJuz[g].push(t);
+        });
+
+        let tahfidzRowsHtml = '';
+        Object.keys(groupedJuz).forEach(juz => {
+          tahfidzRowsHtml += `<tr><td></td><td colspan="4" style="font-weight:bold; background:#f8fafc;">${juz}</td></tr>`;
+          groupedJuz[juz].forEach((item, i) => {
+            tahfidzRowsHtml += `
+              <tr>
+                <td></td>
+                <td>${item.surah}</td>
+                <td style="text-align:center;">${item.score}</td>
+                <td>${angkaKeTerbilang(item.score)}</td>
+                <td style="text-align:center;">${getPredikat(item.score)}</td>
+              </tr>`;
+          });
+        });
+
+        const doaRowsHtml = (st.doaList || []).map(d => `
+          <tr>
+            <td></td>
+            <td>${d.title}</td>
+            <td style="text-align:center;">${d.score}</td>
+            <td>${angkaKeTerbilang(d.score)}</td>
+            <td style="text-align:center;">${getPredikat(d.score)}</td>
+          </tr>`).join('');
+
+        return `
+          <div style="font-family: 'Times New Roman', serif; color: #000; page-break-after: always;">
+            <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 14px;">
+              LAPORAN HASIL CAPAIAN TARGET<br/>CIRI KHUSUS ${school.name.toUpperCase()}<br/>TAHUN AJARAN ${cls.year}<br/>SEMESTER ${cls.semester}
+            </div>
+            <table style="width: 100%; font-size: 11pt; margin-bottom: 10px; border: none;">
+              <tr><td style="width: 22%;">Nama Siswa</td><td>: <strong>${st.name}</strong></td></tr>
+              <tr><td>Kelas / Grade Ummi</td><td>: ${cls.name} (${st.ummiGrade})</td></tr>
+            </table>
+            <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-size: 10.5pt;">
+              <thead>
+                <tr style="background: #f1f5f9;">
+                  <th style="width: 6%;">NO</th>
+                  <th style="width: 44%;">CAPAIAN TARGET</th>
+                  <th style="width: 12%;">NILAI ANGKA</th>
+                  <th style="width: 28%;">NILAI HURUF</th>
+                  <th style="width: 10%;">KET</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="text-align:center; font-weight:bold;">1.</td>
+                  <td><strong>Tilawah</strong><br/>${st.tilawahTarget}</td>
+                  <td style="text-align:center;">${st.tilawahScore ?? '-'}</td>
+                  <td>${angkaKeTerbilang(st.tilawahScore)}</td>
+                  <td style="text-align:center;">${getPredikat(st.tilawahScore)}</td>
+                </tr>
+                <tr><td style="text-align:center; font-weight:bold;">2.</td><td colspan="4"><strong>Hafalan Al Qur’an</strong></td></tr>
+                ${tahfidzRowsHtml}
+                <tr><td style="text-align:center; font-weight:bold;">3.</td><td colspan="4"><strong>Do’a Harian</strong></td></tr>
+                ${doaRowsHtml}
+                <tr><td style="text-align:center; font-weight:bold;">4.</td><td colspan="4"><strong>Mapel Ciri Khusus</strong></td></tr>
+                <tr><td></td><td>1. Pendidikan Kemuhammadiyahan</td><td style="text-align:center;">${st.kemuh ?? '-'}</td><td>${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center;">${getPredikat(st.kemuh)}</td></tr>
+                <tr><td></td><td>2. Bahasa Arab</td><td style="text-align:center;">${st.barab ?? '-'}</td><td>${angkaKeTerbilang(st.barab)}</td><td style="text-align:center;">${getPredikat(st.barab)}</td></tr>
+                <tr><td></td><td>3. MULAQU</td><td style="text-align:center;">${st.mulaqu ?? '-'}</td><td>${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center;">${getPredikat(st.mulaqu)}</td></tr>
+              </tbody>
+            </table>
+            <table style="width: 100%; margin-top: 24px; font-size: 10.5pt; border: none;">
+              <tr>
+                <td style="width: 50%; text-align: center;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
+                <td style="width: 50%; text-align: center;"><br/>Ustadz/dzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
+              </tr>
+            </table>
+          </div>
+        `;
+      }
+
+      // FORMAT 1: MULTI TALENT & ICP TAHFIDZ (TERBAGI 4 BAGIAN A, B, C, D)
+      const doaMultiRows = (st.doaList || []).map((d, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td>${d.title}</td>
+          <td style="text-align:center;">${d.score}</td>
+          <td>${angkaKeTerbilang(d.score)}</td>
+          <td style="text-align:center;">${getPredikat(d.score)}</td>
+        </tr>`).join('');
+
+      const tahfidzMultiRows = (st.tahfidzList || []).map((t, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td>${t.surah}</td>
+          <td style="text-align:center;">${t.score}</td>
+          <td>${angkaKeTerbilang(t.score)}</td>
+          <td style="text-align:center;">${getPredikat(t.score)}</td>
+        </tr>`).join('');
+
+      return `
+        <div style="font-family: 'Times New Roman', serif; color: #000; page-break-after: always;">
+          <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 14px;">
+            LAPORAN HASIL CAPAIAN TARGET<br/>CIRI KHUSUS ${school.name.toUpperCase()}<br/>TAHUN PELAJARAN ${cls.year}<br/>SEMESTER ${cls.semester}
+          </div>
+          <table style="width: 100%; font-size: 11pt; margin-bottom: 10px; border: none;">
+            <tr><td style="width: 22%;">Nama Siswa</td><td>: <strong>${st.name}</strong></td></tr>
+            <tr><td>Kelas / Grade Ummi</td><td>: ${cls.name} (${st.ummiGrade})</td></tr>
+          </table>
+
+          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">A. MAPEL CIRI KHUSUS</div>
+          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 8px;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">MATA PELAJARAN</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:center;">1</td><td>Pendidikan Kemuhammadiyahan</td><td style="text-align:center;">${st.kemuh ?? '-'}</td><td>${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center;">${getPredikat(st.kemuh)}</td></tr>
+              <tr><td style="text-align:center;">2</td><td>Bahasa Arab</td><td style="text-align:center;">${st.barab ?? '-'}</td><td>${angkaKeTerbilang(st.barab)}</td><td style="text-align:center;">${getPredikat(st.barab)}</td></tr>
+              <tr><td style="text-align:center;">3</td><td>Mulaqu</td><td style="text-align:center;">${st.mulaqu ?? '-'}</td><td>${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center;">${getPredikat(st.mulaqu)}</td></tr>
+            </tbody>
+          </table>
+
+          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">B. DOA SEHARI HARI</div>
+          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 8px;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">TARGET DOA</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+            <tbody>${doaMultiRows}</tbody>
+          </table>
+
+          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">C. BACAAN</div>
+          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 8px;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">AL QURAN</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:center;">1</td><td>${st.tilawahTarget || 'Tilawah'}</td><td style="text-align:center;">${st.tilawahScore ?? '-'}</td><td>${angkaKeTerbilang(st.tilawahScore)}</td><td style="text-align:center;">${getPredikat(st.tilawahScore)}</td></tr>
+            </tbody>
+          </table>
+
+          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">D. HAFALAN ALQURAN</div>
+          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">TARGET SURAT</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+            <tbody>${tahfidzMultiRows}</tbody>
+          </table>
+
+          <table style="width: 100%; margin-top: 24px; font-size: 10.5pt; border: none;">
+            <tr>
+              <td style="width: 50%; text-align: center;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
+              <td style="width: 50%; text-align: center;"><br/>Ustadz/Ustadzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
+            </tr>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderRaporPreview() {
+      const sid = parseInt(document.getElementById('selectStudentRapor').value, 10);
+      const type = document.getElementById('selectRaporType').value;
+      const st = db.students.find(s => s.id === sid);
+      const cls = db.classes.find(c => c.id === state.classId);
+      const school = db.schools.find(sc => sc.id === state.schoolId);
+      const teacher = db.teachers.find(t => t.id === state.teacherId);
+      if (!st || !cls || !school) return;
+
+      document.getElementById('raporPreviewContainer').innerHTML = generateStudentRaporHTML(st, cls, school, teacher, type);
+    }
+
+    function downloadDocFile(htmlBody, filename) {
+      const fullHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>Rapor</title></head>
+        <body>${htmlBody}</body></html>`;
+      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportWordSingle() {
+      const sid = parseInt(document.getElementById('selectStudentRapor').value, 10);
+      const type = document.getElementById('selectRaporType').value;
+      const st = db.students.find(s => s.id === sid);
+      const cls = db.classes.find(c => c.id === state.classId);
+      const school = db.schools.find(sc => sc.id === state.schoolId);
+      const teacher = db.teachers.find(t => t.id === state.teacherId);
+      const html = generateStudentRaporHTML(st, cls, school, teacher, type);
+      downloadDocFile(html, `Rapor_${st.name.replace(/\s+/g, '_')}.doc`);
+    }
+
+    function exportWordAllClass() {
+      const type = document.getElementById('selectRaporType').value;
+      const cls = db.classes.find(c => c.id === state.classId);
+      const school = db.schools.find(sc => sc.id === state.schoolId);
+      const teacher = db.teachers.find(t => t.id === state.teacherId);
+      const students = db.students.filter(s => s.classId === state.classId);
+      const combinedHtml = students.map(st => generateStudentRaporHTML(st, cls, school, teacher, type)).join('');
+      downloadDocFile(combinedHtml, `Rapor_Full_Kelas_${cls.name.replace(/\s+/g, '_')}.doc`);
+    }
+
+    // =========================================================================
+    // TAB 4: PENGATURAN & BACKUP JSON
+    // =========================================================================
+    function renderSettings() {
+      const container = document.getElementById('schoolSettingsList');
+      container.innerHTML = db.schools.map(sc => `
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+          <div class="text-xs font-extrabold text-emerald-900">${sc.name}</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" value="${sc.principal}" onchange="updateSchoolPrincipal(${sc.id}, 'principal', this.value)" placeholder="Nama Kepala Sekolah" class="bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold" />
+            <input type="text" value="${sc.principalNbm}" onchange="updateSchoolPrincipal(${sc.id}, 'principalNbm', this.value)" placeholder="NBM Kepala Sekolah" class="bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs" />
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateSchoolPrincipal(id, field, val) {
+      const sc = db.schools.find(s => s.id === id);
+      if (sc) { sc[field] = val; saveDB(); renderRaporPreview(); }
+    }
+
+    function addNewStudent() {
+      const inp = document.getElementById('newStudentName');
+      const name = inp.value.trim();
+      if (!name) return;
+      const newId = Date.now();
+      db.students.push({
+        id: newId, schoolId: state.schoolId, classId: state.classId, name,
+        ummiGrade: 'Jilid 1', tilawahTarget: 'Tilawah', tilawahScore: null,
+        kemuh: null, barab: null, mulaqu: null,
+        doaList: [{ title: 'Al Ma’tsurat', score: 0 }],
+        tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 0 }],
+        icp: null
+      });
+      inp.value = '';
+      saveDB();
+      initSelectors();
+      alert(`✅ Siswa ${name} ditambahkan ke kelas!`);
+    }
+
+    function downloadBackupJSON() {
+      const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup_Rapor_Muhammadiyah_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    function restoreBackupJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          db = JSON.parse(ev.target.result);
+          saveDB();
+          initSelectors();
+          alert('✅ Data berhasil dipulihkan!');
+        } catch { alert('❌ File JSON tidak valid.'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetDemoData() {
+      if (confirm('Kembalikan ke data contoh awal?')) {
+        db = structuredClone(DEFAULT_DB);
+        saveDB();
+        initSelectors();
+      }
+    }
+
+    // =========================================================================
+    // REGISTRASI SERVICE WORKER & INSTALL PROMPT PWA
+    // =========================================================================
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('btnInstallPWA').classList.remove('hidden');
+    });
+
+    async function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('btnInstallPWA').classList.add('hidden');
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // Start App
+    initSelectors();
+  </script>
+</body>
+</html>
