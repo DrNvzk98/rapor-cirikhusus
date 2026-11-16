@@ -15,7 +15,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* PENGATURAN CETAK PDF / PRINT A4 1 SISWA = 1 LEMBAR */
     @page {
       size: A4 portrait;
       margin: 8mm 14mm 8mm 15mm;
@@ -50,8 +49,11 @@
       <div class="flex items-center justify-between">
         <div>
           <div class="flex items-center gap-2">
-            <span class="bg-amber-400 text-emerald-950 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">PWA Ready</span>
-            <span id="modeBadge" class="bg-emerald-700 text-emerald-100 text-[10px] font-semibold px-2 py-0.5 rounded">Mode Lokal / Sheets</span>
+            <span class="bg-amber-400 text-emerald-950 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">v5.0 Stabil</span>
+            <span id="modeBadge" class="bg-emerald-700 text-emerald-100 text-[10px] font-semibold px-2 py-0.5 rounded">Mode Lokal</span>
+            <button onclick="forceClearCacheAndReload()" title="Segarkan Aplikasi" class="text-[10px] bg-emerald-800 hover:bg-emerald-700 text-amber-300 px-2 py-0.5 rounded border border-emerald-600">
+              ↻ Refresh Sistem
+            </button>
           </div>
           <h1 class="text-base sm:text-lg font-bold tracking-tight mt-0.5">Rapor Ciri Khusus & Tahfidz</h1>
         </div>
@@ -144,7 +146,6 @@
 
     <!-- ==================== TAB 2: INPUT NILAI & IMPORT EXCEL ==================== -->
     <section id="view-input" class="hidden space-y-4">
-      <!-- BULK EXCEL BAR -->
       <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 class="text-xs font-bold text-emerald-900">Input Massal via Excel (.xlsx)</h3>
@@ -161,7 +162,6 @@
         </div>
       </div>
 
-      <!-- PILIH SISWA UNTUK INPUT SATUAN -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div class="w-full sm:w-2/3">
@@ -174,12 +174,10 @@
           </div>
         </div>
 
-        <!-- DATALIST BANK SURAH, JUZ, & DOA DARI MASTER ADMIN -->
         <datalist id="datalistJuz"></datalist>
         <datalist id="datalistSurah"></datalist>
         <datalist id="datalistDoa"></datalist>
 
-        <!-- FORM DINAMIS SISWA -->
         <form id="studentScoreForm" onsubmit="saveCurrentStudent(event)" class="space-y-5">
           <!-- 1. GRADE UMMI & BACAAN -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -210,12 +208,12 @@
             </div>
           </div>
 
-          <!-- 2. HAFALAN AL-QUR'AN (BARIS DINAMIS PER ANAK — BISA 10+ SURAH/JUZ TAMBAHAN) -->
+          <!-- 2. HAFALAN AL-QUR'AN -->
           <div class="space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <label class="text-xs font-extrabold text-emerald-900 uppercase">Capaian Hafalan Al-Qur'an (Target Wajib & Surah/Juz Tambahan)</label>
-                <p id="tahfidzInputHint" class="text-[11px] text-slate-500">Isi kolom Juz (untuk Program Tahfidz) dan nama surat/ayat beserta nilainya.</p>
+                <p class="text-[11px] text-slate-500">Bisa ditambah hingga 10+ surah/juz tambahan; rapor otomatis merapatkan baris agar muat 1 lembar A4.</p>
               </div>
               <div class="flex gap-1.5">
                 <button type="button" onclick="addMultipleTahfidzRows(5)" class="bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg">
@@ -240,13 +238,13 @@
             <div id="doaRowsContainer" class="space-y-2"></div>
           </div>
 
-          <!-- 4. MAPEL CIRI KHUSUS (DINAMIS DARI MASTER ADMIN) -->
+          <!-- 4. MAPEL CIRI KHUSUS -->
           <div class="space-y-2">
             <label class="text-xs font-extrabold text-emerald-900 uppercase">Mapel Ciri Khusus</label>
             <div id="customMapelInputsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
           </div>
 
-          <!-- 5. KHUSUS PROGRAM ICP: ENGLISH LEARNING REPORT -->
+          <!-- 5. KHUSUS PROGRAM ICP -->
           <div id="icpSectionBox" class="hidden space-y-3 bg-indigo-50/70 border border-indigo-200 p-3.5 rounded-xl">
             <div class="flex items-center justify-between">
               <span class="text-xs font-extrabold text-indigo-900 uppercase">🇬🇧 ICP English Learning Report (Khusus Kelas ICP)</span>
@@ -301,7 +299,6 @@
           </span>
         </div>
 
-        <!-- TOMBOL UNDUH LENGKAP: 1 SISWA, 1 KELAS (WORD & PDF), & REKAP EXCEL -->
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-100">
           <button onclick="exportWordSingle()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-1">
             📝 Word (1 Siswa)
@@ -321,7 +318,6 @@
         </div>
       </div>
 
-      <!-- AREA PREVIEW DOKUMEN RAPOR -->
       <div id="raporPreviewContainer" class="bg-white p-5 sm:p-8 rounded-xl border border-slate-300 shadow-sm max-w-[210mm] mx-auto overflow-x-auto">
       </div>
     </section>
@@ -349,9 +345,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <input type="text" id="newClassName" placeholder="Nama Kelas (Mis: IV AR-RAHMAN)" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
           <select id="newClassProgram" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold">
-            <option value="Tahfidz">Program: Tahfidz (Format Urutan 1-4)</option>
-            <option value="Multi Talent">Program: Multi Talent (Format Urutan A-D)</option>
-            <option value="ICP">Program: ICP (Format A-D + English)</option>
+            <option value="Tahfidz">Program: Tahfidz (Urutan 1-4)</option>
+            <option value="Multi Talent">Program: Multi Talent (Urutan A-D)</option>
+            <option value="ICP">Program: ICP (Urutan A-D + English)</option>
           </select>
           <select id="newClassTeacherId" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold"></select>
           <input type="text" id="newClassHomeroom" placeholder="Nama Wali Kelas & Gelar..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
@@ -374,7 +370,6 @@
 
       <!-- 4. MASTER BANK JUZ, SURAH, DOA & MAPEL CIRI KHUSUS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Bank Juz & Surah -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
           <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">4. Bank Referensi Juz & Surah</h3>
           <div class="flex gap-2">
@@ -390,7 +385,6 @@
           <div id="masterSurahTags" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
         </div>
 
-        <!-- Master Mapel Ciri Khusus & Bank Doa -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
           <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">5. Master Mapel Ciri Khusus & Doa/Hadits</h3>
           <div class="flex gap-2">
@@ -413,9 +407,13 @@
         <div id="schoolSettingsList" class="space-y-3"></div>
       </div>
 
-      <!-- 7. BACKUP / RESTORE JSON -->
-      <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
-        <h3 class="font-bold text-xs text-amber-900 uppercase">Cadangkan / Pindah Data (JSON)</h3>
+      <!-- 7. SINKRONISASI GOOGLE SHEETS & BACKUP JSON -->
+      <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-3">
+        <h3 class="font-bold text-xs text-amber-900 uppercase">Sinkronisasi Antar-HP & Cadangan Data (JSON)</h3>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input type="text" id="inpSheetsUrlRuntime" placeholder="Tempel URL Web App Google Sheets (.../exec) jika ingin sinkron..." class="flex-1 bg-white border border-amber-300 rounded-lg px-3 py-1.5 text-xs" />
+          <button onclick="saveSheetsUrlRuntime()" class="bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Hubungkan Sheets</button>
+        </div>
         <div class="flex flex-wrap gap-2 pt-1">
           <button onclick="downloadBackupJSON()" class="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">⬇️ Download Backup JSON</button>
           <label class="bg-white border border-amber-400 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer">
@@ -429,7 +427,6 @@
 
   </main>
 
-  <!-- AREA KHUSUS CETAK PDF / PRINT -->
   <div id="print-area" class="hidden"></div>
 
   <script>
@@ -437,10 +434,13 @@
     // KONFIGURASI APLIKASI
     // =========================================================================
     const APP_CONFIG = {
-  USE_GOOGLE_SHEETS: true,
-  SHEETS_WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbz_mXaQ-tKy7gCpoqM32UCmEWdCuR1o6Qri_jfeylCdmGbetdcCAydQUpnxDzhk3Nd0_w/exec',
-  STORAGE_KEY: 'rapor_muh_temanggung_v4'
+      USE_GOOGLE_SHEETS: false,
+      SHEETS_WEB_APP_URL: localStorage.getItem('rapor_sheets_url') || '',
+      STORAGE_KEY: 'rapor_muh_temanggung_v5'
     };
+    if (APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) {
+      APP_CONFIG.USE_GOOGLE_SHEETS = true;
+    }
 
     // =========================================================================
     // DATA AWAL & MASTER REFERENSI
@@ -483,7 +483,7 @@
         juzList: ['Juz 30', 'Juz 29', 'Juz 28', 'Juz 27', 'Juz 26', 'Juz 1', 'Juz 2', 'Juz 3', 'Juz 4', 'Juz 5'],
         surahList: [
           'Juz 30', 'Al Mulk', 'Al Qalam', 'Al Haqqah', 'Al Maarij', 'Nuh', 'Al Jin', 'Al Muzzammil', 'Al Muddassir', 'Al Qiyamah', 'Al Insan', 'Al Mursalat',
-          'An-Naba', 'An-Nazi\'at', '\'Abasa', 'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Insyiqaq', 'Al-Buruj', 'At-Tariq', 'Al-A\'la'
+          'An-Naba', 'An-Naziat', 'Abasa', 'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Insyiqaq', 'Al-Buruj', 'At-Tariq', 'Al-Ala'
         ],
         doaMasterList: ['Al Ma’tsurat', 'Doa Sholat Dhuha', 'Doa Sebelum & Sesudah Makan', 'Doa Kedua Orang Tua', 'Hadits Larangan Sombong', 'Hadits Kebersihan'],
         mapelList: [
@@ -562,56 +562,108 @@
       ]
     };
 
-    let db = JSON.parse(localStorage.getItem(APP_CONFIG.STORAGE_KEY)) || structuredClone(DEFAULT_DB);
-    if (!db.masterData) db.masterData = structuredClone(DEFAULT_DB.masterData);
+    function loadSafeDB() {
+      try {
+        const raw = localStorage.getItem(APP_CONFIG.STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_DB);
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.schools) || !Array.isArray(parsed.students)) {
+          return structuredClone(DEFAULT_DB);
+        }
+        if (!parsed.masterData) parsed.masterData = structuredClone(DEFAULT_DB.masterData);
+        return parsed;
+      } catch (e) {
+        return structuredClone(DEFAULT_DB);
+      }
+    }
 
+    let db = loadSafeDB();
     let state = {
-      schoolId: 1,
-      teacherId: 2,
-      classId: 1,
-      studentId: 101,
+      schoolId: db.schools[0]?.id || 1,
+      teacherId: db.teachers[0]?.id || 2,
+      classId: db.classes[0]?.id || 1,
+      studentId: db.students[0]?.id || 101,
       activeTab: 'dashboard'
     };
 
     function saveDB() {
       localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(db));
-      pushToGoogleSheets(db.students);
+      pushToGoogleSheets();
+    }
+
+    async function forceClearCacheAndReload() {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (let r of regs) await r.unregister();
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (let k of keys) await caches.delete(k);
+      }
+      location.reload(true);
     }
 
     // =========================================================================
-    // SINKRONISASI GOOGLE SHEETS
+    // SINKRONISASI GOOGLE SHEETS (FULL DATABASE: SISWA + MASTER DATA)
     // =========================================================================
+    function saveSheetsUrlRuntime() {
+      const url = document.getElementById('inpSheetsUrlRuntime').value.trim();
+      if (!url.startsWith('http')) {
+        localStorage.removeItem('rapor_sheets_url');
+        APP_CONFIG.USE_GOOGLE_SHEETS = false;
+        APP_CONFIG.SHEETS_WEB_APP_URL = '';
+        alert('URL dikosongkan. Kembali ke Mode Lokal.');
+        return;
+      }
+      localStorage.setItem('rapor_sheets_url', url);
+      APP_CONFIG.SHEETS_WEB_APP_URL = url;
+      APP_CONFIG.USE_GOOGLE_SHEETS = true;
+      syncFromGoogleSheets();
+    }
+
     async function syncFromGoogleSheets() {
-      if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
       const badge = document.getElementById('modeBadge');
+      if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) {
+        badge.textContent = 'Mode Lokal (Siap Offline)';
+        return;
+      }
       badge.textContent = 'Menyinkronkan Sheets...';
       try {
-        const res = await fetch(APP_CONFIG.SHEETS_WEB_APP_URL);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(APP_CONFIG.SHEETS_WEB_APP_URL, { signal: controller.signal });
+        clearTimeout(timeout);
         const json = await res.json();
         if (json.status === 'success') {
-          if (json.students && json.students.length > 0) {
+          if (json.fullDb && json.fullDb.students) {
+            db = json.fullDb;
+            localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(db));
+            initSelectors();
+          } else if (json.students && json.students.length > 0) {
             db.students = json.students;
             localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(db));
             initSelectors();
           } else {
-            await pushToGoogleSheets(db.students);
+            await pushToGoogleSheets();
           }
           badge.textContent = 'Terhubung Google Sheets ✓';
           badge.className = 'bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded';
+        } else {
+          badge.textContent = 'Mode Lokal (Sheets Belum Siap)';
         }
       } catch (err) {
-        badge.textContent = 'Offline (Lokal Cache)';
+        badge.textContent = 'Mode Lokal (Offline Cache)';
       }
     }
 
-    async function pushToGoogleSheets(studentsArray) {
+    async function pushToGoogleSheets() {
       if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
       try {
         await fetch(APP_CONFIG.SHEETS_WEB_APP_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ students: studentsArray })
+          body: JSON.stringify({ students: db.students, fullDb: db })
         });
       } catch (e) {}
     }
@@ -673,6 +725,7 @@
     function initSelectors() {
       const selSchool = document.getElementById('selectSchool');
       selSchool.innerHTML = db.schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      if (!db.schools.some(s => s.id === state.schoolId)) state.schoolId = db.schools[0]?.id || 1;
       selSchool.value = state.schoolId;
 
       const teachersInSchool = db.teachers.filter(t => t.schoolId === state.schoolId);
@@ -707,7 +760,6 @@
       document.getElementById('selectStudentRapor').innerHTML = studentOptions;
       document.getElementById('selectStudentRapor').value = state.studentId;
 
-      // Update datalists
       document.getElementById('datalistJuz').innerHTML = (db.masterData.juzList || []).map(j => `<option value="${j}">`).join('');
       document.getElementById('datalistSurah').innerHTML = (db.masterData.surahList || []).map(s => `<option value="${s}">`).join('');
       document.getElementById('datalistDoa').innerHTML = (db.masterData.doaMasterList || []).map(d => `<option value="${d}">`).join('');
@@ -812,7 +864,7 @@
     }
 
     // =========================================================================
-    // TAB 2: FORM INPUT DINAMIS PER SISWA (MENDUKUNG 10+ SURAH/JUZ TAMBAHAN)
+    // TAB 2: FORM INPUT DINAMIS PER SISWA
     // =========================================================================
     function updateLiveHelper(inpId, helpId) {
       const el = document.getElementById(inpId);
@@ -841,7 +893,6 @@
       document.getElementById('inpTilawahScore').value = st.tilawahScore ?? '';
       updateLiveHelper('inpTilawahScore', 'helpTilawah');
 
-      // Render Mapel Ciri Khusus Dinamis
       const mapelContainer = document.getElementById('customMapelInputsContainer');
       mapelContainer.innerHTML = (db.masterData.mapelList || []).map(m => {
         const val = getStudentMapelValue(st, m.key);
@@ -1086,14 +1137,12 @@
       const pageBreakStyle = isLastStudent ? '' : 'page-break-after: always; break-after: page;';
       const kopHtml = generateKopSuratHTML(school);
 
-      // AUTO-COMPACT SCALING: Jika anak punya 10+ surah/doa tambahan, rapatkan font & padding agar tetap 1 lembar A4
       const totalDynamicRows = (st.tahfidzList?.length || 0) + (st.doaList?.length || 0);
       const isUltraDense = totalDynamicRows >= 9;
       const tblFontSize = isUltraDense ? '8pt' : '9pt';
       const cellPad = isUltraDense ? '1px 4px' : '2px 5px';
       const sigMargin = isUltraDense ? '8px' : '14px';
 
-      // FORMAT ICP ENGLISH LEARNING REPORT
       if (type === 'icp_english' && cls.program === 'ICP') {
         const icp = st.icp || { vocab: 90, listening: 90, speaking: 90, reading: 90, remarks: 'Keep up the good work.' };
         return `
@@ -1145,8 +1194,6 @@
         `;
       }
 
-      // FORMAT KHUSUS PROGRAM TAHFIDZ:
-      // 1 TABEL UTAMA (1. Tilawah -> 2. Hafalan Al Qur'an per Juz -> 3. Do'a Harian & Hadits -> 4. Mapel Ciri Khusus)
       if (isTahfidzClass(cls)) {
         const groupedJuz = {};
         (st.tahfidzList || []).forEach(t => {
@@ -1248,8 +1295,6 @@
         `;
       }
 
-      // FORMAT MULTI TALENT & ICP TAHFIDZ:
-      // 4 TABEL TERPISAH (A. Mapel Ciri Khusus -> B. Doa & Hadits -> C. Bacaan Al-Qur'an -> D. Hafalan Alquran)
       const mapelMultiRows = (db.masterData.mapelList || []).map((m, i) => {
         const val = getStudentMapelValue(st, m.key);
         const numVal = val === '' ? null : val;
@@ -1360,7 +1405,7 @@
     }
 
     // =========================================================================
-    // EXPORT WORD (.DOC) & PDF (1 SISWA = 1 LEMBAR / 1 KELAS)
+    // EXPORT WORD (.DOC) & PDF
     // =========================================================================
     function downloadDocFile(htmlBody, filename) {
       const fullHtml = `
@@ -1447,13 +1492,13 @@
     }
 
     // =========================================================================
-    // TAB 4: MASTER ADMIN (GURU, KELAS, SISWA PILIH KELAS, JUZ, SURAH, MAPEL)
+    // TAB 4: MASTER ADMIN
     // =========================================================================
     function renderSettings() {
       const activeSchool = db.schools.find(s => s.id === state.schoolId);
       document.getElementById('lblActiveSchoolAdmin').textContent = activeSchool?.name || '';
+      document.getElementById('inpSheetsUrlRuntime').value = APP_CONFIG.SHEETS_WEB_APP_URL || '';
 
-      // 1. Render Daftar Guru di Sekolah Aktif
       const teachersInSchool = db.teachers.filter(t => t.schoolId === state.schoolId);
       document.getElementById('masterTeachersList').innerHTML = teachersInSchool.map(t => `
         <div class="py-2 flex items-center justify-between">
@@ -1464,7 +1509,6 @@
 
       document.getElementById('newClassTeacherId').innerHTML = teachersInSchool.map(t => `<option value="${t.id}">Pengampu: ${t.name}</option>`).join('');
 
-      // 2. Render Daftar Kelas di Sekolah Aktif & Populate Dropdown Tambah Siswa
       const classesInSchool = db.classes.filter(c => c.schoolId === state.schoolId);
       document.getElementById('masterClassesList').innerHTML = classesInSchool.map(c => {
         const guru = db.teachers.find(t => t.id === c.teacherId);
@@ -1485,7 +1529,6 @@
         selNewStudentClass.value = state.classId;
       }
 
-      // 4. Render Tags Bank Juz, Surah, Doa, Mapel
       document.getElementById('masterJuzTags').innerHTML = (db.masterData.juzList || []).map((j, idx) => `
         <span class="bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
           ${j} <button onclick="removeMasterItem('juzList', ${idx})" class="text-rose-500 font-bold">×</button>
@@ -1510,7 +1553,6 @@
         </span>
       `).join('');
 
-      // 6. Profil Kepala Sekolah
       document.getElementById('schoolSettingsList').innerHTML = db.schools.map(sc => `
         <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
           <div class="text-xs font-extrabold text-emerald-900">${sc.name}</div>
@@ -1684,9 +1726,6 @@
       }
     }
 
-    // =========================================================================
-    // REGISTRASI SERVICE WORKER & INSTALL PROMPT PWA
-    // =========================================================================
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
