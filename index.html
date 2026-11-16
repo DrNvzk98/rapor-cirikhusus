@@ -1176,6 +1176,55 @@
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
+    // Tarik data terbaru dari Google Sheets saat aplikasi dibuka
+async function syncFromGoogleSheets() {
+  if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = 'Menyinkronkan Sheets...';
+  try {
+    const res = await fetch(APP_CONFIG.SHEETS_WEB_APP_URL);
+    const json = await res.json();
+    if (json.status === 'success') {
+      if (json.students && json.students.length > 0) {
+        db.students = json.students;
+        saveDB();
+        initSelectors();
+      } else {
+        // Jika Google Sheets masih kosong, kirim data awal (seeder) ke Sheets
+        await pushToGoogleSheets(db.students);
+      }
+      badge.textContent = 'Terhubung Google Sheets ✓';
+      badge.className = 'bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded';
+    }
+  } catch (err) {
+    badge.textContent = 'Offline (Lokal Cache)';
+  }
+}
+
+// Kirim data siswa ke Google Sheets setiap kali disimpan
+async function pushToGoogleSheets(studentsArray) {
+  if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
+  try {
+    await fetch(APP_CONFIG.SHEETS_WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ students: studentsArray })
+    });
+  } catch (e) {
+    console.warn('Gagal mengirim ke Sheets, tersimpan di lokal:', e);
+  }
+}
+
+// Modifikasi saveDB agar otomatis mengirim ke Google Sheets
+const originalSaveDB = saveDB;
+saveDB = function() {
+  originalSaveDB();
+  pushToGoogleSheets(db.students);
+};
+
+// Jalankan sinkronisasi saat halaman dimuat
+syncFromGoogleSheets();
     // Start App
     initSelectors();
   </script>
