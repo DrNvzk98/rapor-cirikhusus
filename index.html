@@ -18,7 +18,7 @@
     /* PENGATURAN CETAK PDF / PRINT A4 1 SISWA = 1 LEMBAR */
     @page {
       size: A4 portrait;
-      margin: 10mm 14mm 10mm 16mm;
+      margin: 8mm 14mm 8mm 15mm;
     }
     @media print {
       body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
@@ -84,7 +84,7 @@
       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-active py-2 px-2 rounded-lg text-xs sm:text-sm font-bold transition">📊 Progres</button>
       <button onclick="switchTab('input')" id="tab-input" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">✍️ Input Nilai</button>
       <button onclick="switchTab('rapor')" id="tab-rapor" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">📄 Cetak Rapor</button>
-      <button onclick="switchTab('settings')" id="tab-settings" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">⚙️ Master</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">⚙️ Master Admin</button>
     </nav>
 
     <!-- ==================== TAB 1: DASHBOARD & FAST TRACK ==================== -->
@@ -131,7 +131,7 @@
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
                 <th class="p-3">Nama Siswa</th>
                 <th class="p-3">Grade Ummi</th>
-                <th class="p-3">Capaian Hafalan</th>
+                <th class="p-3">Capaian Hafalan (6 Bulan)</th>
                 <th class="p-3 text-center">Status Nilai</th>
                 <th class="p-3 text-right">Aksi Cepat</th>
               </tr>
@@ -174,6 +174,11 @@
           </div>
         </div>
 
+        <!-- DATALIST BANK SURAH, JUZ, & DOA DARI MASTER ADMIN -->
+        <datalist id="datalistJuz"></datalist>
+        <datalist id="datalistSurah"></datalist>
+        <datalist id="datalistDoa"></datalist>
+
         <!-- FORM DINAMIS SISWA -->
         <form id="studentScoreForm" onsubmit="saveCurrentStudent(event)" class="space-y-5">
           <!-- 1. GRADE UMMI & BACAAN -->
@@ -205,13 +210,21 @@
             </div>
           </div>
 
-          <!-- 2. HAFALAN AL-QUR'AN (BARIS DINAMIS PER ANAK) -->
+          <!-- 2. HAFALAN AL-QUR'AN (BARIS DINAMIS PER ANAK — BISA 10+ SURAH/JUZ TAMBAHAN) -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="text-xs font-extrabold text-emerald-900 uppercase">Capaian Hafalan Al-Qur'an (Dinamis Per Anak)</label>
-              <button type="button" onclick="addTahfidzRow()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg">
-                + Tambah Surat/Juz
-              </button>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <label class="text-xs font-extrabold text-emerald-900 uppercase">Capaian Hafalan Al-Qur'an (Target Wajib & Surah/Juz Tambahan)</label>
+                <p class="text-[11px] text-slate-500">Bisa ditambah hingga 10+ surah/juz tambahan dalam 6 bulan; rapor otomatis merapatkan baris agar tetap 1 lembar A4.</p>
+              </div>
+              <div class="flex gap-1.5">
+                <button type="button" onclick="addMultipleTahfidzRows(5)" class="bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg">
+                  +5 Baris Sekaligus
+                </button>
+                <button type="button" onclick="addTahfidzRow()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                  + Tambah Surah/Juz
+                </button>
+              </div>
             </div>
             <div id="tahfidzRowsContainer" class="space-y-2"></div>
           </div>
@@ -227,32 +240,10 @@
             <div id="doaRowsContainer" class="space-y-2"></div>
           </div>
 
-          <!-- 4. MAPEL CIRI KHUSUS -->
+          <!-- 4. MAPEL CIRI KHUSUS (DINAMIS DARI MASTER ADMIN) -->
           <div class="space-y-2">
             <label class="text-xs font-extrabold text-emerald-900 uppercase">Mapel Ciri Khusus</label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span class="block text-[11px] font-bold text-slate-600 mb-1">Pendidikan Kemuhammadiyahan</span>
-                <div class="flex items-center gap-2">
-                  <input type="number" min="0" max="100" id="inpKemuh" oninput="updateLiveHelper('inpKemuh','helpKemuh')" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center" />
-                  <span id="helpKemuh" class="text-[10px] font-semibold text-slate-600">-</span>
-                </div>
-              </div>
-              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span class="block text-[11px] font-bold text-slate-600 mb-1">Bahasa Arab</span>
-                <div class="flex items-center gap-2">
-                  <input type="number" min="0" max="100" id="inpBArab" oninput="updateLiveHelper('inpBArab','helpBArab')" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center" />
-                  <span id="helpBArab" class="text-[10px] font-semibold text-slate-600">-</span>
-                </div>
-              </div>
-              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span class="block text-[11px] font-bold text-slate-600 mb-1">MULAQU</span>
-                <div class="flex items-center gap-2">
-                  <input type="number" min="0" max="100" id="inpMulaqu" oninput="updateLiveHelper('inpMulaqu','helpMulaqu')" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center" />
-                  <span id="helpMulaqu" class="text-[10px] font-semibold text-slate-600">-</span>
-                </div>
-              </div>
-            </div>
+            <div id="customMapelInputsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
           </div>
 
           <!-- 5. KHUSUS PROGRAM ICP: ENGLISH LEARNING REPORT -->
@@ -306,7 +297,7 @@
             </select>
           </div>
           <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-            ✓ Tata Letak Padat: 1 Siswa = 1 Lembar A4 + Kop Resmi
+            ✓ Auto-Fit A4: 1 Siswa = 1 Lembar + Kop Resmi
           </span>
         </div>
 
@@ -335,23 +326,95 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 4: PENGATURAN & BACKUP ==================== -->
-    <section id="view-settings" class="hidden space-y-4">
+    <!-- ==================== TAB 4: MASTER ADMIN LENGKAP ==================== -->
+    <section id="view-settings" class="hidden space-y-5">
+
+      <!-- 1. MASTER GURU PENGAMPU -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h3 class="font-bold text-sm text-slate-800">Profil Kepala Sekolah, Kop Surat & Unit Sekolah</h3>
-        <div id="schoolSettingsList" class="space-y-3"></div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 class="font-bold text-sm text-emerald-900">1. Master Guru Pengampu Tahfidz / Ciri Khusus</h3>
+          <span class="text-[11px] text-slate-500">Unit: <strong id="lblActiveSchoolAdmin"></strong></span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input type="text" id="newTeacherName" placeholder="Nama & Gelar Ustadz/Ustadzah..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
+          <input type="text" id="newTeacherNbm" placeholder="NBM (Opsional)..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
+          <button onclick="addNewTeacher()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah Guru</button>
+        </div>
+        <div id="masterTeachersList" class="divide-y divide-slate-100 text-xs"></div>
       </div>
 
+      <!-- 2. MASTER KELAS & WALI KELAS -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h3 class="font-bold text-sm text-slate-800">Tambah Siswa Baru ke Kelas Aktif</h3>
+        <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">2. Master Kelas & Pengampu</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input type="text" id="newClassName" placeholder="Nama Kelas (Mis: IV AR-RAHMAN)" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
+          <select id="newClassProgram" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold">
+            <option value="Multi Talent">Program: Multi Talent</option>
+            <option value="Tahfidz">Program: Tahfidz (Khusus)</option>
+            <option value="ICP">Program: ICP</option>
+          </select>
+          <select id="newClassTeacherId" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold"></select>
+          <input type="text" id="newClassHomeroom" placeholder="Nama Wali Kelas & Gelar..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
+          <input type="text" id="newClassHomeroomNbm" placeholder="NBM Wali Kelas..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
+          <input type="text" id="newClassDate" value="Temanggung, 20 Juni 2026" placeholder="Tempat & Tanggal Rapor..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
+        </div>
+        <button onclick="addNewClass()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah Kelas Baru</button>
+        <div id="masterClassesList" class="divide-y divide-slate-100 text-xs pt-2"></div>
+      </div>
+
+      <!-- 3. MASTER SISWA DI KELAS AKTIF -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">3. Tambah Siswa ke Kelas Aktif</h3>
         <div class="flex gap-2">
-          <input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
-          <button onclick="addNewStudent()" class="bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah</button>
+          <input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
+          <button onclick="addNewStudent()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah Siswa</button>
         </div>
       </div>
 
+      <!-- 4. MASTER BANK JUZ, SURAH, DOA & MAPEL CIRI KHUSUS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Bank Juz & Surah -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">4. Bank Referensi Juz & Surah</h3>
+          <div class="flex gap-2">
+            <input type="text" id="newMasterJuz" placeholder="Tambah Juz (Mis: Juz 28)" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs" />
+            <button onclick="addMasterItem('juzList', 'newMasterJuz')" class="bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">+ Juz</button>
+          </div>
+          <div id="masterJuzTags" class="flex flex-wrap gap-1.5"></div>
+
+          <div class="flex gap-2 pt-2 border-t border-slate-100">
+            <input type="text" id="newMasterSurah" placeholder="Tambah Surah (Mis: Q.S An-Naba 1-40)" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs" />
+            <button onclick="addMasterItem('surahList', 'newMasterSurah')" class="bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">+ Surah</button>
+          </div>
+          <div id="masterSurahTags" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
+        </div>
+
+        <!-- Master Mapel Ciri Khusus & Bank Doa -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">5. Master Mapel Ciri Khusus & Doa/Hadits</h3>
+          <div class="flex gap-2">
+            <input type="text" id="newMasterMapel" placeholder="Tambah Mapel Ciri Khusus..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs" />
+            <button onclick="addMasterMapel()" class="bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">+ Mapel</button>
+          </div>
+          <div id="masterMapelTags" class="flex flex-wrap gap-1.5"></div>
+
+          <div class="flex gap-2 pt-2 border-t border-slate-100">
+            <input type="text" id="newMasterDoa" placeholder="Tambah Doa / Hadits..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs" />
+            <button onclick="addMasterItem('doaMasterList', 'newMasterDoa')" class="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">+ Doa</button>
+          </div>
+          <div id="masterDoaTags" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- 6. PROFIL KOP SURAT & KEPALA SEKOLAH -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-bold text-sm text-slate-800">6. Profil Kepala Sekolah & Kop Surat</h3>
+        <div id="schoolSettingsList" class="space-y-3"></div>
+      </div>
+
+      <!-- 7. BACKUP / RESTORE JSON -->
       <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
-        <h3 class="font-bold text-xs text-amber-900 uppercase">Cadangkan / Pindah Data Uji Coba (JSON)</h3>
+        <h3 class="font-bold text-xs text-amber-900 uppercase">Cadangkan / Pindah Data (JSON)</h3>
         <div class="flex flex-wrap gap-2 pt-1">
           <button onclick="downloadBackupJSON()" class="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">⬇️ Download Backup JSON</button>
           <label class="bg-white border border-amber-400 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer">
@@ -365,21 +428,21 @@
 
   </main>
 
-  <!-- AREA KHUSUS CETAK PDF / PRINT (TERSEMBUNYI DI LAYAR, MUNCUL SAAT SAVE AS PDF / PRINT) -->
+  <!-- AREA KHUSUS CETAK PDF / PRINT -->
   <div id="print-area" class="hidden"></div>
 
   <script>
     // =========================================================================
-    // KONFIGURASI APLIKASI (ISI URL APPS SCRIPT JIKA INGIN SINKRON GOOGLE SHEETS)
+    // KONFIGURASI APLIKASI
     // =========================================================================
     const APP_CONFIG = {
-      USE_GOOGLE_SHEETS: false, // Ubah ke true jika sudah mengisi URL di bawah
-      SHEETS_WEB_APP_URL: '',   // Tempel URL Web App Apps Script di sini
-      STORAGE_KEY: 'rapor_muh_temanggung_v2'
+      USE_GOOGLE_SHEETS: false,
+      SHEETS_WEB_APP_URL: '',
+      STORAGE_KEY: 'rapor_muh_temanggung_v3'
     };
 
     // =========================================================================
-    // DATA AWAL (SEEDER LENGKAP DENGAN KOP SURAT RESMI SEKOLAH)
+    // DATA AWAL & MASTER REFERENSI
     // =========================================================================
     const DEFAULT_DB = {
       schools: [
@@ -415,17 +478,30 @@
         { id: 3, schoolId: 1, grade: 6, name: 'VI IBNU KHALDUN', program: 'Tahfidz', homeroom: 'Muhlishin, S.Pd.', homeroomNbm: '', teacherId: 3, semester: 'II', year: '2025/2026', date: 'Temanggung, 30 Mei 2026' },
         { id: 4, schoolId: 2, grade: 5, name: 'V AL-FATIH', program: 'Tahfidz', homeroom: 'Siti Aminah, S.Pd.', homeroomNbm: '1.390.111', teacherId: 4, semester: 'II', year: '2025/2026', date: 'Temanggung, 30 Mei 2026' }
       ],
+      masterData: {
+        juzList: ['Juz 30', 'Juz 29', 'Juz 28', 'Juz 27', 'Juz 26', 'Juz 1', 'Juz 2', 'Juz 3', 'Juz 4', 'Juz 5'],
+        surahList: [
+          'Juz 30', 'Al Mulk', 'Al Qalam', 'Al Haqqah', 'Al Maarij', 'Nuh', 'Al Jin', 'Al Muzzammil', 'Al Muddassir', 'Al Qiyamah', 'Al Insan', 'Al Mursalat',
+          'An-Naba', 'An-Nazi\'at', '\'Abasa', 'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Insyiqaq', 'Al-Buruj', 'At-Tariq', 'Al-A\'la'
+        ],
+        doaMasterList: ['Al Ma’tsurat', 'Doa Sholat Dhuha', 'Doa Sebelum & Sesudah Makan', 'Doa Kedua Orang Tua', 'Hadits Larangan Sombong', 'Hadits Kebersihan'],
+        mapelList: [
+          { key: 'kemuh', label: 'Pendidikan Kemuhammadiyahan' },
+          { key: 'barab', label: 'Bahasa Arab' },
+          { key: 'mulaqu', label: 'MULAQU' }
+        ]
+      },
       students: [
         {
           id: 101, schoolId: 1, classId: 1, name: 'Abisatya Putra Dewangga', ummiGrade: "Tilawah Al-Qur'an",
-          tilawahTarget: 'Tilawah', tilawahScore: 73, kemuh: 78, barab: 77, mulaqu: 79,
+          tilawahTarget: 'Tilawah', tilawahScore: 73, kemuh: 78, barab: 77, mulaqu: 79, extraMapels: {},
           doaList: [{ title: 'Al Ma’tsurat', score: 94 }],
           tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 98 }],
           icp: null
         },
         {
           id: 102, schoolId: 1, classId: 1, name: 'Nadhifa Firza Khairani Hidayat', ummiGrade: "Tilawah Al-Qur'an",
-          tilawahTarget: 'Tilawah', tilawahScore: 86, kemuh: 82, barab: 81, mulaqu: 85,
+          tilawahTarget: 'Tilawah', tilawahScore: 86, kemuh: 82, barab: 81, mulaqu: 85, extraMapels: {},
           doaList: [{ title: 'Al Ma’tsurat', score: 87 }],
           tahfidzList: [
             { juzGroup: '', surah: 'Juz 30', score: 97 },
@@ -437,42 +513,37 @@
           icp: null
         },
         {
-          id: 103, schoolId: 1, classId: 1, name: 'Ajeng Indah Nur Pramesti', ummiGrade: 'Jilid 6',
-          tilawahTarget: 'Tilawah', tilawahScore: 70, kemuh: 78, barab: 70, mulaqu: 74,
-          doaList: [{ title: 'Al Ma’tsurat', score: 78 }],
-          tahfidzList: [{ juzGroup: '', surah: '¼ Juz 30', score: 70 }],
-          icp: null
-        },
-        {
           id: 201, schoolId: 1, classId: 2, name: 'Agnaa Aulia Matahari', ummiGrade: 'Jilid 5',
-          tilawahTarget: 'Tilawah', tilawahScore: 88, kemuh: 90, barab: 89, mulaqu: 91,
+          tilawahTarget: 'Tilawah', tilawahScore: 88, kemuh: 90, barab: 89, mulaqu: 91, extraMapels: {},
           doaList: [{ title: 'Doa Harian Kelas 2', score: 92 }],
           tahfidzList: [{ juzGroup: '', surah: 'Juz 30 (An-Naba - Ad-Dhuha)', score: 94 }],
           icp: {
             vocab: 94, listening: 98, speaking: 97, reading: 97,
-            remarks: 'The student has shown outstanding English skills this semester. The student is highly active in class, expresses ideas clearly, and grasps new concepts quickly. Keep up the excellent work.'
+            remarks: 'The student has shown outstanding English skills this semester. Keep up the excellent work.'
           }
         },
         {
-          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: "Tilawah Al-Qur'an",
-          tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 91, barab: 91, mulaqu: 95,
+          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni (Contoh 10 Surah Tambahan)', ummiGrade: "Tilawah Al-Qur'an",
+          tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 91, barab: 91, mulaqu: 95, extraMapels: {},
           doaList: [{ title: '1. Al Ma’tsurat', score: 98 }],
-          tahfidzList: [{ juzGroup: 'Juz 1', surah: 'Q.S Al Baqarah ayat 85 - 93', score: 85 }],
-          icp: null
-        },
-        {
-          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: "Tilawah Al-Qur'an",
-          tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 88, barab: 92, mulaqu: 95,
-          doaList: [
-            { title: '1. Al Ma’tsurat', score: 98 },
-            { title: '6. Larangan sombong', score: 95 }
+          tahfidzList: [
+            { juzGroup: 'Juz 1', surah: 'Q.S Al Baqarah ayat 85 - 93', score: 85 },
+            { juzGroup: 'Juz 29', surah: '1. Al Mulk', score: 92 },
+            { juzGroup: 'Juz 29', surah: '2. Al Qalam', score: 90 },
+            { juzGroup: 'Juz 29', surah: '3. Al Haqqah', score: 91 },
+            { juzGroup: 'Juz 29', surah: '4. Al Maarij', score: 89 },
+            { juzGroup: 'Juz 29', surah: '5. Nuh', score: 94 },
+            { juzGroup: 'Juz 29', surah: '6. Al Jin', score: 90 },
+            { juzGroup: 'Juz 29', surah: '7. Al Muzzammil', score: 92 },
+            { juzGroup: 'Juz 29', surah: '8. Al Muddassir', score: 88 },
+            { juzGroup: 'Juz 29', surah: '9. Al Qiyamah', score: 93 },
+            { juzGroup: 'Juz 29', surah: '10. Al Insan', score: 95 }
           ],
-          tahfidzList: [{ juzGroup: 'Juz 3', surah: '1. Q.S Al Baqarah 265', score: 85 }],
           icp: null
         },
         {
           id: 401, schoolId: 2, classId: 4, name: 'Muhammad Zayd Al-Ghifari', ummiGrade: 'Tajwid',
-          tilawahTarget: 'Q.S Al-Mulk 1-15', tilawahScore: 89, kemuh: 86, barab: 88, mulaqu: 90,
+          tilawahTarget: 'Q.S Al-Mulk 1-15', tilawahScore: 89, kemuh: 86, barab: 88, mulaqu: 90, extraMapels: {},
           doaList: [{ title: '1. Doa Sholat Dhuha', score: 94 }],
           tahfidzList: [{ juzGroup: 'Juz 29', surah: '1. Q.S Al-Mulk 1-30', score: 92 }],
           icp: null
@@ -481,6 +552,8 @@
     };
 
     let db = JSON.parse(localStorage.getItem(APP_CONFIG.STORAGE_KEY)) || structuredClone(DEFAULT_DB);
+    if (!db.masterData) db.masterData = structuredClone(DEFAULT_DB.masterData);
+
     let state = {
       schoolId: 1,
       teacherId: 2,
@@ -495,7 +568,7 @@
     }
 
     // =========================================================================
-    // SINKRONISASI GOOGLE SHEETS (OPSIONAL)
+    // SINKRONISASI GOOGLE SHEETS
     // =========================================================================
     async function syncFromGoogleSheets() {
       if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
@@ -529,9 +602,7 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ students: studentsArray })
         });
-      } catch (e) {
-        console.warn('Gagal mengirim ke Sheets, tersimpan di lokal:', e);
-      }
+      } catch (e) {}
     }
 
     // =========================================================================
@@ -621,6 +692,11 @@
       document.getElementById('selectStudentRapor').innerHTML = studentOptions;
       document.getElementById('selectStudentRapor').value = state.studentId;
 
+      // Update datalists
+      document.getElementById('datalistJuz').innerHTML = (db.masterData.juzList || []).map(j => `<option value="${j}">`).join('');
+      document.getElementById('datalistSurah').innerHTML = (db.masterData.surahList || []).map(s => `<option value="${s}">`).join('');
+      document.getElementById('datalistDoa').innerHTML = (db.masterData.doaMasterList || []).map(d => `<option value="${d}">`).join('');
+
       renderAllViews();
     }
 
@@ -691,10 +767,14 @@
       const tbody = document.getElementById('fastTrackTableBody');
       tbody.innerHTML = students.map(s => {
         const isDone = s.tilawahScore !== null && s.tahfidzList.length > 0;
-        const hafalanSummary = s.tahfidzList.map(t => `${t.juzGroup ? t.juzGroup + ': ' : ''}${t.surah} (${t.score})`).join(', ') || '<span class="text-slate-400 italic">Belum ada setoran</span>';
+        const countSurah = s.tahfidzList.length;
+        const hafalanSummary = s.tahfidzList.map(t => `${t.juzGroup ? '[' + t.juzGroup + '] ' : ''}${t.surah} (${t.score})`).join(', ') || '<span class="text-slate-400 italic">Belum ada setoran</span>';
         return `
           <tr class="hover:bg-slate-50">
-            <td class="p-3 font-bold text-slate-800">${s.name}</td>
+            <td class="p-3 font-bold text-slate-800">
+              ${s.name}
+              ${countSurah > 1 ? `<span class="ml-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded">${countSurah} target</span>` : ''}
+            </td>
             <td class="p-3"><span class="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[11px]">${s.ummiGrade}</span></td>
             <td class="p-3 text-slate-600">${hafalanSummary}</td>
             <td class="p-3 text-center">
@@ -717,11 +797,21 @@
     }
 
     // =========================================================================
-    // TAB 2: FORM INPUT DINAMIS PER SISWA
+    // TAB 2: FORM INPUT DINAMIS PER SISWA (MENDUKUNG 10+ SURAH/JUZ TAMBAHAN)
     // =========================================================================
     function updateLiveHelper(inpId, helpId) {
-      const val = document.getElementById(inpId).value;
-      document.getElementById(helpId).textContent = val !== '' ? `${angkaKeTerbilang(val)} (${getPredikat(val)})` : '-';
+      const el = document.getElementById(inpId);
+      const helpEl = document.getElementById(helpId);
+      if (!el || !helpEl) return;
+      const val = el.value;
+      helpEl.textContent = val !== '' ? `${angkaKeTerbilang(val)} (${getPredikat(val)})` : '-';
+    }
+
+    function getStudentMapelValue(st, key) {
+      if (key === 'kemuh') return st.kemuh ?? '';
+      if (key === 'barab') return st.barab ?? '';
+      if (key === 'mulaqu') return st.mulaqu ?? '';
+      return st.extraMapels?.[key] ?? '';
     }
 
     function loadStudentForm() {
@@ -734,14 +824,24 @@
       document.getElementById('inpUmmiGrade').value = st.ummiGrade || 'Jilid 1';
       document.getElementById('inpTilawahTarget').value = st.tilawahTarget || '';
       document.getElementById('inpTilawahScore').value = st.tilawahScore ?? '';
-      document.getElementById('inpKemuh').value = st.kemuh ?? '';
-      document.getElementById('inpBArab').value = st.barab ?? '';
-      document.getElementById('inpMulaqu').value = st.mulaqu ?? '';
-
       updateLiveHelper('inpTilawahScore', 'helpTilawah');
-      updateLiveHelper('inpKemuh', 'helpKemuh');
-      updateLiveHelper('inpBArab', 'helpBArab');
-      updateLiveHelper('inpMulaqu', 'helpMulaqu');
+
+      // Render Mapel Ciri Khusus Dinamis
+      const mapelContainer = document.getElementById('customMapelInputsContainer');
+      mapelContainer.innerHTML = (db.masterData.mapelList || []).map(m => {
+        const val = getStudentMapelValue(st, m.key);
+        return `
+          <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <span class="block text-[11px] font-bold text-slate-600 mb-1">${m.label}</span>
+            <div class="flex items-center gap-2">
+              <input type="number" min="0" max="100" data-mapel-key="${m.key}" id="inpMapel_${m.key}" value="${val}"
+                oninput="updateLiveHelper('inpMapel_${m.key}','helpMapel_${m.key}')"
+                class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-center inp-dynamic-mapel" />
+              <span id="helpMapel_${m.key}" class="text-[10px] font-semibold text-slate-600">${val !== '' ? angkaKeTerbilang(val) + ' (' + getPredikat(val) + ')' : '-'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
 
       const tContainer = document.getElementById('tahfidzRowsContainer');
       tContainer.innerHTML = '';
@@ -771,19 +871,27 @@
       const div = document.createElement('div');
       div.className = 'flex flex-wrap sm:flex-nowrap items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 tahfidz-row';
       div.innerHTML = `
-        ${isTahfidzProgram ? `<input type="text" placeholder="Juz (Mis: Juz 27)" value="${juzGroup}" class="w-28 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold inp-juz" />` : `<input type="hidden" value="" class="inp-juz" />`}
-        <input type="text" placeholder="Target Surat / Ayat (Mis: Juz 30 atau Al Mulk)" value="${surah}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-surah" />
+        ${isTahfidzProgram ? `<input type="text" list="datalistJuz" placeholder="Juz (Mis: Juz 29)" value="${juzGroup}" class="w-28 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold inp-juz" />` : `<input type="hidden" value="${juzGroup}" class="inp-juz" />`}
+        <input type="text" list="datalistSurah" placeholder="Pilih/Ketik Target Surat atau Juz (Mis: Al Mulk)" value="${surah}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-surah" />
         <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-center inp-score" />
         <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:bg-rose-100 px-2 py-1 rounded text-xs font-bold">✕</button>
       `;
       document.getElementById('tahfidzRowsContainer').appendChild(div);
     }
 
+    function addMultipleTahfidzRows(count) {
+      const rows = document.querySelectorAll('.tahfidz-row');
+      const lastJuz = rows.length > 0 ? rows[rows.length - 1].querySelector('.inp-juz').value : 'Juz 29';
+      for (let i = 0; i < count; i++) {
+        addTahfidzRow(lastJuz, '', '');
+      }
+    }
+
     function addDoaRow(title = '', score = '') {
       const div = document.createElement('div');
       div.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 doa-row';
       div.innerHTML = `
-        <input type="text" placeholder="Nama Doa / Hadits (Mis: Al Ma'tsurat)" value="${title}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-doa-title" />
+        <input type="text" list="datalistDoa" placeholder="Pilih/Ketik Doa / Hadits (Mis: Al Ma'tsurat)" value="${title}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-doa-title" />
         <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-bold text-center inp-doa-score" />
         <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:bg-rose-100 px-2 py-1 rounded text-xs font-bold">✕</button>
       `;
@@ -810,14 +918,15 @@
       const tScore = document.getElementById('inpTilawahScore').value;
       st.tilawahScore = tScore !== '' ? parseInt(tScore, 10) : null;
 
-      const kScore = document.getElementById('inpKemuh').value;
-      st.kemuh = kScore !== '' ? parseInt(kScore, 10) : null;
-
-      const bScore = document.getElementById('inpBArab').value;
-      st.barab = bScore !== '' ? parseInt(bScore, 10) : null;
-
-      const mScore = document.getElementById('inpMulaqu').value;
-      st.mulaqu = mScore !== '' ? parseInt(mScore, 10) : null;
+      if (!st.extraMapels) st.extraMapels = {};
+      document.querySelectorAll('.inp-dynamic-mapel').forEach(inp => {
+        const key = inp.getAttribute('data-mapel-key');
+        const val = inp.value !== '' ? parseInt(inp.value, 10) : null;
+        if (key === 'kemuh') st.kemuh = val;
+        else if (key === 'barab') st.barab = val;
+        else if (key === 'mulaqu') st.mulaqu = val;
+        else st.extraMapels[key] = val;
+      });
 
       st.tahfidzList = Array.from(document.querySelectorAll('.tahfidz-row')).map(row => ({
         juzGroup: row.querySelector('.inp-juz').value.trim(),
@@ -841,7 +950,7 @@
       }
 
       saveDB();
-      alert(`✅ Capaian ${st.name} berhasil disimpan!`);
+      alert(`✅ Capaian ${st.name} (${st.tahfidzList.length} target hafalan) berhasil disimpan!`);
       renderDashboard();
     }
 
@@ -935,22 +1044,22 @@
     }
 
     // =========================================================================
-    // TAB 3: GENERATOR KOP SURAT + RAPOR PADAT 1 SISWA = 1 LEMBAR A4
+    // TAB 3: GENERATOR KOP SURAT + RAPOR AUTO-FIT 1 SISWA = 1 LEMBAR A4
     // =========================================================================
     function generateKopSuratHTML(school) {
       return `
-        <table style="width: 100%; border-collapse: collapse; border-bottom: 2.5pt double #000000; margin-bottom: 8px; padding-bottom: 4px;">
+        <table style="width: 100%; border-collapse: collapse; border-bottom: 2.5pt double #000000; margin-bottom: 6px; padding-bottom: 3px;">
           <tr>
-            <td style="width: 14%; text-align: center; vertical-align: middle; padding-bottom: 4px;">
-              <div style="width: 52px; height: 52px; border: 1.5pt solid #065f46; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 7pt; color: #065f46; line-height: 1.1; text-align: center;">
+            <td style="width: 13%; text-align: center; vertical-align: middle; padding-bottom: 3px;">
+              <div style="width: 48px; height: 48px; border: 1.5pt solid #065f46; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 6.5pt; color: #065f46; line-height: 1.1; text-align: center;">
                 LOGO<br/>SD MUH
               </div>
             </td>
-            <td style="width: 86%; text-align: center; vertical-align: middle; padding-bottom: 4px; line-height: 1.15;">
-              <div style="font-size: 9.5pt; font-weight: bold; letter-spacing: 0.3px;">${school.majelis || 'MAJLIS PENDIDIKAN DASAR DAN MENENGAH DAN PNF'}</div>
-              <div style="font-size: 9.5pt; font-weight: bold; letter-spacing: 0.3px;">${school.pcm || 'PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG'}</div>
-              <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px;">${school.name.toUpperCase()}</div>
-              <div style="font-size: 8.5pt; font-weight: bold;">${school.akreditasi || '( Terakreditasi A )'}</div>
+            <td style="width: 87%; text-align: center; vertical-align: middle; padding-bottom: 3px; line-height: 1.12;">
+              <div style="font-size: 9pt; font-weight: bold; letter-spacing: 0.3px;">${school.majelis || 'MAJLIS PENDIDIKAN DASAR DAN MENENGAH DAN PNF'}</div>
+              <div style="font-size: 9pt; font-weight: bold; letter-spacing: 0.3px;">${school.pcm || 'PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG'}</div>
+              <div style="font-size: 12.5pt; font-weight: bold; letter-spacing: 0.5px;">${school.name.toUpperCase()}</div>
+              <div style="font-size: 8pt; font-weight: bold;">${school.akreditasi || '( Terakreditasi A )'}</div>
               <div style="font-size: 7.5pt; font-style: italic;">${school.address}</div>
             </td>
           </tr>
@@ -962,16 +1071,23 @@
       const pageBreakStyle = isLastStudent ? '' : 'page-break-after: always; break-after: page;';
       const kopHtml = generateKopSuratHTML(school);
 
-      // FORMAT ICP ENGLISH LEARNING REPORT (1 LEMBAR PADAT)
+      // AUTO-COMPACT SCALING: Jika anak punya 10+ surah/doa tambahan, rapatkan font & padding agar tetap 1 lembar A4
+      const totalDynamicRows = (st.tahfidzList?.length || 0) + (st.doaList?.length || 0);
+      const isUltraDense = totalDynamicRows >= 9;
+      const tblFontSize = isUltraDense ? '8pt' : '9pt';
+      const cellPad = isUltraDense ? '1px 4px' : '2px 5px';
+      const sigMargin = isUltraDense ? '8px' : '14px';
+
+      // FORMAT ICP ENGLISH LEARNING REPORT
       if (type === 'icp_english' && cls.program === 'ICP') {
         const icp = st.icp || { vocab: 90, listening: 90, speaking: 90, reading: 90, remarks: 'Keep up the good work.' };
         return `
           <div class="rapor-sheet" style="font-family: 'Times New Roman', serif; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
             ${kopHtml}
-            <div style="text-align: center; font-weight: bold; font-size: 10.5pt; line-height: 1.2; margin-bottom: 8px;">
+            <div style="text-align: center; font-weight: bold; font-size: 10pt; line-height: 1.2; margin-bottom: 6px;">
               STUDENT LEARNING REPORT<br/>INTERNATIONAL CLASS PROGRAM<br/>ACADEMIC YEAR ${cls.year}
             </div>
-            <table style="width: 100%; font-size: 9.5pt; margin-bottom: 6px; border: none; border-collapse: collapse;">
+            <table style="width: 100%; font-size: 9pt; margin-bottom: 5px; border: none; border-collapse: collapse;">
               <tr>
                 <td style="width: 14%; padding: 1px 0;"><strong>Student</strong></td>
                 <td style="width: 48%; padding: 1px 0;">: ${st.name}</td>
@@ -1014,7 +1130,7 @@
         `;
       }
 
-      // FORMAT 2: PROGRAM KHUSUS TAHFIDZ (1 TABEL UTAMA NOMOR 1-4, 1 LEMBAR PADAT)
+      // FORMAT 2: PROGRAM KHUSUS TAHFIDZ (1 TABEL UTAMA NOMOR 1-4, MENDUKUNG BANYAK JUZ/SURAH DALAM 1 LEMBAR)
       if (cls.program === 'Tahfidz') {
         const groupedJuz = {};
         (st.tahfidzList || []).forEach(t => {
@@ -1025,35 +1141,48 @@
 
         let tahfidzRowsHtml = '';
         Object.keys(groupedJuz).forEach(juz => {
-          tahfidzRowsHtml += `<tr><td style="padding:2px 4px;"></td><td colspan="4" style="font-weight:bold; background:#f8fafc; padding:2px 5px;">${juz}</td></tr>`;
+          tahfidzRowsHtml += `<tr><td style="padding:${cellPad};"></td><td colspan="4" style="font-weight:bold; background:#f8fafc; padding:${cellPad};">${juz}</td></tr>`;
           groupedJuz[juz].forEach((item) => {
             tahfidzRowsHtml += `
               <tr>
-                <td style="padding:2px 4px;"></td>
-                <td style="padding:2px 5px;">${item.surah}</td>
-                <td style="text-align:center; padding:2px 4px;">${item.score}</td>
-                <td style="padding:2px 5px;">${angkaKeTerbilang(item.score)}</td>
-                <td style="text-align:center; padding:2px 4px;">${getPredikat(item.score)}</td>
+                <td style="padding:${cellPad};"></td>
+                <td style="padding:${cellPad};">${item.surah}</td>
+                <td style="text-align:center; padding:${cellPad};">${item.score}</td>
+                <td style="padding:${cellPad};">${angkaKeTerbilang(item.score)}</td>
+                <td style="text-align:center; padding:${cellPad};">${getPredikat(item.score)}</td>
               </tr>`;
           });
         });
 
         const doaRowsHtml = (st.doaList || []).map(d => `
           <tr>
-            <td style="padding:2px 4px;"></td>
-            <td style="padding:2px 5px;">${d.title}</td>
-            <td style="text-align:center; padding:2px 4px;">${d.score}</td>
-            <td style="padding:2px 5px;">${angkaKeTerbilang(d.score)}</td>
-            <td style="text-align:center; padding:2px 4px;">${getPredikat(d.score)}</td>
+            <td style="padding:${cellPad};"></td>
+            <td style="padding:${cellPad};">${d.title}</td>
+            <td style="text-align:center; padding:${cellPad};">${d.score}</td>
+            <td style="padding:${cellPad};">${angkaKeTerbilang(d.score)}</td>
+            <td style="text-align:center; padding:${cellPad};">${getPredikat(d.score)}</td>
           </tr>`).join('');
+
+        const mapelRowsHtml = (db.masterData.mapelList || []).map((m, idx) => {
+          const val = getStudentMapelValue(st, m.key);
+          const numVal = val === '' ? null : val;
+          return `
+            <tr>
+              <td style="padding:${cellPad};"></td>
+              <td style="padding:${cellPad};">${idx + 1}. ${m.label}</td>
+              <td style="text-align:center; padding:${cellPad};">${numVal ?? '-'}</td>
+              <td style="padding:${cellPad};">${angkaKeTerbilang(numVal)}</td>
+              <td style="text-align:center; padding:${cellPad};">${getPredikat(numVal)}</td>
+            </tr>`;
+        }).join('');
 
         return `
           <div class="rapor-sheet" style="font-family: 'Times New Roman', serif; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
             ${kopHtml}
-            <div style="text-align: center; font-weight: bold; font-size: 10.5pt; line-height: 1.2; margin-bottom: 8px;">
+            <div style="text-align: center; font-weight: bold; font-size: 10pt; line-height: 1.15; margin-bottom: 6px;">
               LAPORAN HASIL CAPAIAN TARGET CIRI KHUSUS<br/>${school.name.toUpperCase()}<br/>TAHUN AJARAN ${cls.year} &bull; SEMESTER ${cls.semester}
             </div>
-            <table style="width: 100%; font-size: 9.5pt; margin-bottom: 6px; border: none; border-collapse: collapse;">
+            <table style="width: 100%; font-size: 9pt; margin-bottom: 4px; border: none; border-collapse: collapse;">
               <tr>
                 <td style="width: 16%; padding: 1px 0;">Nama Siswa</td>
                 <td style="width: 46%; padding: 1px 0;">: <strong>${st.name}</strong></td>
@@ -1067,70 +1196,81 @@
                 <td style="padding: 1px 0;">: ${st.ummiGrade}</td>
               </tr>
             </table>
-            <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15;">
+            <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: ${tblFontSize}; line-height: 1.12;">
               <thead>
                 <tr style="background: #f1f5f9;">
-                  <th style="width: 6%; padding: 3px;">NO</th>
-                  <th style="width: 44%; padding: 3px;">CAPAIAN TARGET</th>
-                  <th style="width: 12%; padding: 3px;">NILAI ANGKA</th>
-                  <th style="width: 28%; padding: 3px;">NILAI HURUF</th>
-                  <th style="width: 10%; padding: 3px;">KET</th>
+                  <th style="width: 6%; padding: 2px;">NO</th>
+                  <th style="width: 44%; padding: 2px;">CAPAIAN TARGET</th>
+                  <th style="width: 12%; padding: 2px;">NILAI ANGKA</th>
+                  <th style="width: 28%; padding: 2px;">NILAI HURUF</th>
+                  <th style="width: 10%; padding: 2px;">KET</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style="text-align:center; font-weight:bold; padding:2px 4px;">1.</td>
-                  <td style="padding:2px 5px;"><strong>Tilawah</strong> (${st.tilawahTarget})</td>
-                  <td style="text-align:center; padding:2px 4px;">${st.tilawahScore ?? '-'}</td>
-                  <td style="padding:2px 5px;">${angkaKeTerbilang(st.tilawahScore)}</td>
-                  <td style="text-align:center; padding:2px 4px;">${getPredikat(st.tilawahScore)}</td>
+                  <td style="text-align:center; font-weight:bold; padding:${cellPad};">1.</td>
+                  <td style="padding:${cellPad};"><strong>Tilawah</strong> (${st.tilawahTarget})</td>
+                  <td style="text-align:center; padding:${cellPad};">${st.tilawahScore ?? '-'}</td>
+                  <td style="padding:${cellPad};">${angkaKeTerbilang(st.tilawahScore)}</td>
+                  <td style="text-align:center; padding:${cellPad};">${getPredikat(st.tilawahScore)}</td>
                 </tr>
-                <tr><td style="text-align:center; font-weight:bold; padding:2px 4px;">2.</td><td colspan="4" style="padding:2px 5px;"><strong>Hafalan Al Qur’an</strong></td></tr>
+                <tr><td style="text-align:center; font-weight:bold; padding:${cellPad};">2.</td><td colspan="4" style="padding:${cellPad};"><strong>Hafalan Al Qur’an</strong></td></tr>
                 ${tahfidzRowsHtml}
-                <tr><td style="text-align:center; font-weight:bold; padding:2px 4px;">3.</td><td colspan="4" style="padding:2px 5px;"><strong>Do’a Harian & Hadits</strong></td></tr>
+                <tr><td style="text-align:center; font-weight:bold; padding:${cellPad};">3.</td><td colspan="4" style="padding:${cellPad};"><strong>Do’a Harian & Hadits</strong></td></tr>
                 ${doaRowsHtml}
-                <tr><td style="text-align:center; font-weight:bold; padding:2px 4px;">4.</td><td colspan="4" style="padding:2px 5px;"><strong>Mapel Ciri Khusus</strong></td></tr>
-                <tr><td style="padding:2px 4px;"></td><td style="padding:2px 5px;">1. Pendidikan Kemuhammadiyahan</td><td style="text-align:center; padding:2px 4px;">${st.kemuh ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center; padding:2px 4px;">${getPredikat(st.kemuh)}</td></tr>
-                <tr><td style="padding:2px 4px;"></td><td style="padding:2px 5px;">2. Bahasa Arab</td><td style="text-align:center; padding:2px 4px;">${st.barab ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.barab)}</td><td style="text-align:center; padding:2px 4px;">${getPredikat(st.barab)}</td></tr>
-                <tr><td style="padding:2px 4px;"></td><td style="padding:2px 5px;">3. MULAQU</td><td style="text-align:center; padding:2px 4px;">${st.mulaqu ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center; padding:2px 4px;">${getPredikat(st.mulaqu)}</td></tr>
+                <tr><td style="text-align:center; font-weight:bold; padding:${cellPad};">4.</td><td colspan="4" style="padding:${cellPad};"><strong>Mapel Ciri Khusus</strong></td></tr>
+                ${mapelRowsHtml}
               </tbody>
             </table>
-            <table style="width: 100%; margin-top: 14px; font-size: 9.5pt; border: none; border-collapse: collapse;">
+            <table style="width: 100%; margin-top: ${sigMargin}; font-size: 9pt; border: none; border-collapse: collapse;">
               <tr>
-                <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
-                <td style="width: 50%; text-align: center; vertical-align: top;"><br/>Ustadz/Ustadzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
+                <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Wali Kelas<br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
+                <td style="width: 50%; text-align: center; vertical-align: top;"><br/>Ustadz/Ustadzah<br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
               </tr>
             </table>
           </div>
         `;
       }
 
-      // FORMAT 1: MULTI TALENT & ICP TAHFIDZ (4 BAGIAN A, B, C, D — PADAT 1 LEMBAR A4)
+      // FORMAT 1: MULTI TALENT & ICP TAHFIDZ (4 BAGIAN A, B, C, D — AUTO-FIT 1 LEMBAR A4)
+      const mapelMultiRows = (db.masterData.mapelList || []).map((m, i) => {
+        const val = getStudentMapelValue(st, m.key);
+        const numVal = val === '' ? null : val;
+        return `
+          <tr>
+            <td style="text-align:center; padding:${cellPad};">${i + 1}</td>
+            <td style="padding:${cellPad};">${m.label}</td>
+            <td style="text-align:center; padding:${cellPad};">${numVal ?? '-'}</td>
+            <td style="padding:${cellPad};">${angkaKeTerbilang(numVal)}</td>
+            <td style="text-align:center; padding:${cellPad};">${getPredikat(numVal)}</td>
+          </tr>`;
+      }).join('');
+
       const doaMultiRows = (st.doaList || []).map((d, i) => `
         <tr>
-          <td style="text-align:center; padding:2px 4px;">${i + 1}</td>
-          <td style="padding:2px 5px;">${d.title}</td>
-          <td style="text-align:center; padding:2px 4px;">${d.score}</td>
-          <td style="padding:2px 5px;">${angkaKeTerbilang(d.score)}</td>
-          <td style="text-align:center; padding:2px 4px;">${getPredikat(d.score)}</td>
+          <td style="text-align:center; padding:${cellPad};">${i + 1}</td>
+          <td style="padding:${cellPad};">${d.title}</td>
+          <td style="text-align:center; padding:${cellPad};">${d.score}</td>
+          <td style="padding:${cellPad};">${angkaKeTerbilang(d.score)}</td>
+          <td style="text-align:center; padding:${cellPad};">${getPredikat(d.score)}</td>
         </tr>`).join('');
 
       const tahfidzMultiRows = (st.tahfidzList || []).map((t, i) => `
         <tr>
-          <td style="text-align:center; padding:2px 4px;">${i + 1}</td>
-          <td style="padding:2px 5px;">${t.surah}</td>
-          <td style="text-align:center; padding:2px 4px;">${t.score}</td>
-          <td style="padding:2px 5px;">${angkaKeTerbilang(t.score)}</td>
-          <td style="text-align:center; padding:2px 4px;">${getPredikat(t.score)}</td>
+          <td style="text-align:center; padding:${cellPad};">${i + 1}</td>
+          <td style="padding:${cellPad};">${t.juzGroup ? t.juzGroup + ' - ' : ''}${t.surah}</td>
+          <td style="text-align:center; padding:${cellPad};">${t.score}</td>
+          <td style="padding:${cellPad};">${angkaKeTerbilang(t.score)}</td>
+          <td style="text-align:center; padding:${cellPad};">${getPredikat(t.score)}</td>
         </tr>`).join('');
 
       return `
         <div class="rapor-sheet" style="font-family: 'Times New Roman', serif; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
           ${kopHtml}
-          <div style="text-align: center; font-weight: bold; font-size: 10.5pt; line-height: 1.2; margin-bottom: 8px;">
+          <div style="text-align: center; font-weight: bold; font-size: 10pt; line-height: 1.15; margin-bottom: 6px;">
             LAPORAN HASIL CAPAIAN TARGET CIRI KHUSUS<br/>${school.name.toUpperCase()}<br/>TAHUN PELAJARAN ${cls.year} &bull; SEMESTER ${cls.semester}
           </div>
-          <table style="width: 100%; font-size: 9.5pt; margin-bottom: 6px; border: none; border-collapse: collapse;">
+          <table style="width: 100%; font-size: 9pt; margin-bottom: 4px; border: none; border-collapse: collapse;">
             <tr>
               <td style="width: 16%; padding: 1px 0;">Nama Siswa</td>
               <td style="width: 46%; padding: 1px 0;">: <strong>${st.name}</strong></td>
@@ -1145,40 +1285,36 @@
             </tr>
           </table>
 
-          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">A. MAPEL CIRI KHUSUS</div>
-          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15; margin-bottom: 5px;">
+          <div style="font-weight:bold; font-size:8.5pt; margin-top:3px; margin-bottom:1px;">A. MAPEL CIRI KHUSUS</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: ${tblFontSize}; line-height: 1.12; margin-bottom: 4px;">
             <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">MATA PELAJARAN</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
-            <tbody>
-              <tr><td style="text-align:center; padding:2px;">1</td><td style="padding:2px 5px;">Pendidikan Kemuhammadiyahan</td><td style="text-align:center; padding:2px;">${st.kemuh ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.kemuh)}</td></tr>
-              <tr><td style="text-align:center; padding:2px;">2</td><td style="padding:2px 5px;">Bahasa Arab</td><td style="text-align:center; padding:2px;">${st.barab ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.barab)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.barab)}</td></tr>
-              <tr><td style="text-align:center; padding:2px;">3</td><td style="padding:2px 5px;">Mulaqu</td><td style="text-align:center; padding:2px;">${st.mulaqu ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.mulaqu)}</td></tr>
-            </tbody>
+            <tbody>${mapelMultiRows}</tbody>
           </table>
 
-          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">B. DOA SEHARI HARI & HADITS</div>
-          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15; margin-bottom: 5px;">
+          <div style="font-weight:bold; font-size:8.5pt; margin-top:3px; margin-bottom:1px;">B. DOA SEHARI HARI & HADITS</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: ${tblFontSize}; line-height: 1.12; margin-bottom: 4px;">
             <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">TARGET DOA / HADITS</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>${doaMultiRows}</tbody>
           </table>
 
-          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">C. BACAAN AL-QUR'AN</div>
-          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15; margin-bottom: 5px;">
+          <div style="font-weight:bold; font-size:8.5pt; margin-top:3px; margin-bottom:1px;">C. BACAAN AL-QUR'AN</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: ${tblFontSize}; line-height: 1.12; margin-bottom: 4px;">
             <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">AL QURAN / GRADE UMMI</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>
-              <tr><td style="text-align:center; padding:2px;">1</td><td style="padding:2px 5px;">${st.tilawahTarget || 'Tilawah'} (${st.ummiGrade})</td><td style="text-align:center; padding:2px;">${st.tilawahScore ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.tilawahScore)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.tilawahScore)}</td></tr>
+              <tr><td style="text-align:center; padding:${cellPad};">1</td><td style="padding:${cellPad};">${st.tilawahTarget || 'Tilawah'} (${st.ummiGrade})</td><td style="text-align:center; padding:${cellPad};">${st.tilawahScore ?? '-'}</td><td style="padding:${cellPad};">${angkaKeTerbilang(st.tilawahScore)}</td><td style="text-align:center; padding:${cellPad};">${getPredikat(st.tilawahScore)}</td></tr>
             </tbody>
           </table>
 
-          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">D. HAFALAN ALQURAN</div>
-          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15;">
+          <div style="font-weight:bold; font-size:8.5pt; margin-top:3px; margin-bottom:1px;">D. HAFALAN ALQURAN</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: ${tblFontSize}; line-height: 1.12;">
             <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">TARGET SURAT / JUZ</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>${tahfidzMultiRows}</tbody>
           </table>
 
-          <table style="width: 100%; margin-top: 14px; font-size: 9.5pt; border: none; border-collapse: collapse;">
+          <table style="width: 100%; margin-top: ${sigMargin}; font-size: 9pt; border: none; border-collapse: collapse;">
             <tr>
-              <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
-              <td style="width: 50%; text-align: center; vertical-align: top;"><br/>Ustadz/Ustadzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
+              <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Wali Kelas<br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
+              <td style="width: 50%; text-align: center; vertical-align: top;"><br/>Ustadz/Ustadzah<br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
             </tr>
           </table>
         </div>
@@ -1198,7 +1334,7 @@
     }
 
     // =========================================================================
-    // EXPORT WORD (.DOC) DENGAN SETTING HALAMAN A4 MARGIN RAPAT (1 SISWA = 1 LEMBAR)
+    // EXPORT WORD (.DOC) & PDF (1 SISWA = 1 LEMBAR / 1 KELAS)
     // =========================================================================
     function downloadDocFile(htmlBody, filename) {
       const fullHtml = `
@@ -1206,22 +1342,13 @@
         <head>
           <meta charset='utf-8'>
           <title>Rapor Ciri Khusus</title>
-          <!--[if gte mso 9]>
-          <xml>
-            <w:WordDocument>
-              <w:View>Print</w:View>
-              <w:Zoom>100</w:Zoom>
-              <w:DoNotOptimizeForBrowser/>
-            </w:WordDocument>
-          </xml>
-          <![endif]-->
+          <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
           <style>
             @page Section1 {
               size: 21.0cm 29.7cm;
-              margin: 1.0cm 1.4cm 1.0cm 1.6cm;
-              mso-header-margin: 0.5cm;
-              mso-footer-margin: 0.5cm;
-              mso-paper-source: 0;
+              margin: 0.8cm 1.4cm 0.8cm 1.5cm;
+              mso-header-margin: 0.4cm;
+              mso-footer-margin: 0.4cm;
             }
             div.Section1 { page: Section1; }
             body { font-family: 'Times New Roman', serif; margin: 0; padding: 0; }
@@ -1245,8 +1372,7 @@
       const cls = db.classes.find(c => c.id === state.classId);
       const school = db.schools.find(sc => sc.id === state.schoolId);
       const teacher = db.teachers.find(t => t.id === state.teacherId);
-      const html = generateStudentRaporHTML(st, cls, school, teacher, type, true);
-      downloadDocFile(html, `Rapor_${st.name.replace(/\s+/g, '_')}.doc`);
+      downloadDocFile(generateStudentRaporHTML(st, cls, school, teacher, type, true), `Rapor_${st.name.replace(/\s+/g, '_')}.doc`);
     }
 
     function exportWordAllClass() {
@@ -1261,9 +1387,6 @@
       downloadDocFile(combinedHtml, `Rapor_1_Kelas_${cls.name.replace(/\s+/g, '_')}.doc`);
     }
 
-    // =========================================================================
-    // EXPORT PDF LANGSUNG (1 SISWA = 1 LEMBAR / 1 KELAS = N LEMBAR)
-    // =========================================================================
     function printPdfSingle() {
       const sid = parseInt(document.getElementById('selectStudentRapor').value, 10);
       const type = document.getElementById('selectRaporType').value;
@@ -1298,11 +1421,66 @@
     }
 
     // =========================================================================
-    // TAB 4: PENGATURAN KOP SURAT, KEPALA SEKOLAH & BACKUP JSON
+    // TAB 4: MASTER ADMIN (GURU, KELAS, JUZ, SURAH, DOA, MAPEL, KOP SURAT)
     // =========================================================================
     function renderSettings() {
-      const container = document.getElementById('schoolSettingsList');
-      container.innerHTML = db.schools.map(sc => `
+      const activeSchool = db.schools.find(s => s.id === state.schoolId);
+      document.getElementById('lblActiveSchoolAdmin').textContent = activeSchool?.name || '';
+
+      // 1. Render Daftar Guru di Sekolah Aktif
+      const teachersInSchool = db.teachers.filter(t => t.schoolId === state.schoolId);
+      document.getElementById('masterTeachersList').innerHTML = teachersInSchool.map(t => `
+        <div class="py-2 flex items-center justify-between">
+          <div><strong>${t.name}</strong> <span class="text-slate-500">${t.nbm ? '(NBM. ' + t.nbm + ')' : ''}</span></div>
+          <button onclick="deleteTeacher(${t.id})" class="text-rose-600 hover:underline font-bold text-[11px]">Hapus</button>
+        </div>
+      `).join('');
+
+      // Populate dropdown guru di form tambah kelas
+      document.getElementById('newClassTeacherId').innerHTML = teachersInSchool.map(t => `<option value="${t.id}">Pengampu: ${t.name}</option>`).join('');
+
+      // 2. Render Daftar Kelas di Sekolah Aktif
+      const classesInSchool = db.classes.filter(c => c.schoolId === state.schoolId);
+      document.getElementById('masterClassesList').innerHTML = classesInSchool.map(c => {
+        const guru = db.teachers.find(t => t.id === c.teacherId);
+        return `
+          <div class="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <div>
+              <strong>${c.name}</strong> <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-bold">${c.program}</span>
+              <div class="text-[11px] text-slate-500">Wali: ${c.homeroom} | Pengampu: ${guru?.name || '-'}</div>
+            </div>
+            <button onclick="deleteClass(${c.id})" class="text-rose-600 hover:underline font-bold text-[11px] self-start sm:self-center">Hapus</button>
+          </div>
+        `;
+      }).join('');
+
+      // 4. Render Tags Bank Juz, Surah, Doa, Mapel
+      document.getElementById('masterJuzTags').innerHTML = (db.masterData.juzList || []).map((j, idx) => `
+        <span class="bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+          ${j} <button onclick="removeMasterItem('juzList', ${idx})" class="text-rose-500 font-bold">×</button>
+        </span>
+      `).join('');
+
+      document.getElementById('masterSurahTags').innerHTML = (db.masterData.surahList || []).map((s, idx) => `
+        <span class="bg-slate-100 border border-slate-200 text-slate-800 text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
+          ${s} <button onclick="removeMasterItem('surahList', ${idx})" class="text-rose-500 font-bold">×</button>
+        </span>
+      `).join('');
+
+      document.getElementById('masterMapelTags').innerHTML = (db.masterData.mapelList || []).map((m, idx) => `
+        <span class="bg-indigo-50 border border-indigo-200 text-indigo-900 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+          ${m.label} ${idx >= 3 ? `<button onclick="removeMasterMapel(${idx})" class="text-rose-500 font-bold">×</button>` : ''}
+        </span>
+      `).join('');
+
+      document.getElementById('masterDoaTags').innerHTML = (db.masterData.doaMasterList || []).map((d, idx) => `
+        <span class="bg-amber-50 border border-amber-200 text-amber-900 text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
+          ${d} <button onclick="removeMasterItem('doaMasterList', ${idx})" class="text-rose-500 font-bold">×</button>
+        </span>
+      `).join('');
+
+      // 6. Profil Kepala Sekolah
+      document.getElementById('schoolSettingsList').innerHTML = db.schools.map(sc => `
         <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
           <div class="text-xs font-extrabold text-emerald-900">${sc.name}</div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1323,6 +1501,95 @@
       `).join('');
     }
 
+    function addNewTeacher() {
+      const name = document.getElementById('newTeacherName').value.trim();
+      const nbm = document.getElementById('newTeacherNbm').value.trim();
+      if (!name) return alert('Masukkan nama guru terlebih dahulu.');
+      db.teachers.push({ id: Date.now(), schoolId: state.schoolId, name, nbm });
+      document.getElementById('newTeacherName').value = '';
+      document.getElementById('newTeacherNbm').value = '';
+      saveDB();
+      initSelectors();
+      alert(`✅ Guru ${name} berhasil ditambahkan!`);
+    }
+
+    function deleteTeacher(tid) {
+      if (db.teachers.filter(t => t.schoolId === state.schoolId).length <= 1) return alert('Minimal harus ada 1 guru di sekolah ini.');
+      if (confirm('Hapus data guru ini?')) {
+        db.teachers = db.teachers.filter(t => t.id !== tid);
+        saveDB();
+        initSelectors();
+      }
+    }
+
+    function addNewClass() {
+      const name = document.getElementById('newClassName').value.trim();
+      const program = document.getElementById('newClassProgram').value;
+      const teacherId = parseInt(document.getElementById('newClassTeacherId').value, 10);
+      const homeroom = document.getElementById('newClassHomeroom').value.trim() || '-';
+      const homeroomNbm = document.getElementById('newClassHomeroomNbm').value.trim();
+      const date = document.getElementById('newClassDate').value.trim() || 'Temanggung, 20 Juni 2026';
+      if (!name) return alert('Masukkan nama kelas terlebih dahulu.');
+      const newCid = Date.now();
+      db.classes.push({
+        id: newCid, schoolId: state.schoolId, grade: 1, name, program,
+        homeroom, homeroomNbm, teacherId, semester: 'II', year: '2025/2026', date
+      });
+      document.getElementById('newClassName').value = '';
+      document.getElementById('newClassHomeroom').value = '';
+      document.getElementById('newClassHomeroomNbm').value = '';
+      state.teacherId = teacherId;
+      state.classId = newCid;
+      saveDB();
+      initSelectors();
+      alert(`✅ Kelas ${name} (${program}) berhasil ditambahkan!`);
+    }
+
+    function deleteClass(cid) {
+      if (confirm('Hapus kelas ini beserta data siswanya?')) {
+        db.classes = db.classes.filter(c => c.id !== cid);
+        db.students = db.students.filter(s => s.classId !== cid);
+        saveDB();
+        initSelectors();
+      }
+    }
+
+    function addMasterItem(listKey, inputId) {
+      const inp = document.getElementById(inputId);
+      const val = inp.value.trim();
+      if (!val) return;
+      if (!db.masterData[listKey].includes(val)) {
+        db.masterData[listKey].push(val);
+        saveDB();
+        initSelectors();
+      }
+      inp.value = '';
+    }
+
+    function removeMasterItem(listKey, idx) {
+      db.masterData[listKey].splice(idx, 1);
+      saveDB();
+      initSelectors();
+    }
+
+    function addMasterMapel() {
+      const inp = document.getElementById('newMasterMapel');
+      const label = inp.value.trim();
+      if (!label) return;
+      const key = 'mapel_' + Date.now();
+      db.masterData.mapelList.push({ key, label });
+      inp.value = '';
+      saveDB();
+      initSelectors();
+      alert(`✅ Mapel "${label}" ditambahkan ke form input & rapor!`);
+    }
+
+    function removeMasterMapel(idx) {
+      db.masterData.mapelList.splice(idx, 1);
+      saveDB();
+      initSelectors();
+    }
+
     function updateSchoolField(id, field, val) {
       const sc = db.schools.find(s => s.id === id);
       if (sc) { sc[field] = val; saveDB(); renderRaporPreview(); }
@@ -1336,7 +1603,7 @@
       db.students.push({
         id: newId, schoolId: state.schoolId, classId: state.classId, name,
         ummiGrade: 'Jilid 1', tilawahTarget: 'Tilawah', tilawahScore: null,
-        kemuh: null, barab: null, mulaqu: null,
+        kemuh: null, barab: null, mulaqu: null, extraMapels: {},
         doaList: [{ title: 'Al Ma’tsurat', score: 0 }],
         tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 0 }],
         icp: null
