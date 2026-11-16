@@ -169,8 +169,8 @@
             <select id="selectStudentInput" onchange="loadStudentForm()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-600"></select>
           </div>
           <div class="flex items-center gap-1.5 self-end">
-            <button onclick="navigateStudent(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◀ Seb</button>
-            <button onclick="navigateStudent(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">Ber ▶</button>
+            <button type="button" onclick="navigateStudent(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◀ Seb</button>
+            <button type="button" onclick="navigateStudent(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">Ber ▶</button>
           </div>
         </div>
 
@@ -370,11 +370,11 @@
 
   <script>
     // =========================================================================
-    // KONFIGURASI APLIKASI
+    // KONFIGURASI APLIKASI (ISI URL APPS SCRIPT JIKA INGIN SINKRON GOOGLE SHEETS)
     // =========================================================================
     const APP_CONFIG = {
-      USE_GOOGLE_SHEETS: false,
-      SHEETS_WEB_APP_URL: '',
+      USE_GOOGLE_SHEETS: false, // Ubah ke true jika sudah mengisi URL di bawah
+      SHEETS_WEB_APP_URL: '',   // Tempel URL Web App Apps Script di sini
       STORAGE_KEY: 'rapor_muh_temanggung_v2'
     };
 
@@ -417,14 +417,14 @@
       ],
       students: [
         {
-          id: 101, schoolId: 1, classId: 1, name: 'Abisatya Putra Dewangga', ummiGrade: 'Tilawah Al-Qur'an',
+          id: 101, schoolId: 1, classId: 1, name: 'Abisatya Putra Dewangga', ummiGrade: "Tilawah Al-Qur'an",
           tilawahTarget: 'Tilawah', tilawahScore: 73, kemuh: 78, barab: 77, mulaqu: 79,
           doaList: [{ title: 'Al Ma’tsurat', score: 94 }],
           tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 98 }],
           icp: null
         },
         {
-          id: 102, schoolId: 1, classId: 1, name: 'Nadhifa Firza Khairani Hidayat', ummiGrade: 'Tilawah Al-Qur'an',
+          id: 102, schoolId: 1, classId: 1, name: 'Nadhifa Firza Khairani Hidayat', ummiGrade: "Tilawah Al-Qur'an",
           tilawahTarget: 'Tilawah', tilawahScore: 86, kemuh: 82, barab: 81, mulaqu: 85,
           doaList: [{ title: 'Al Ma’tsurat', score: 87 }],
           tahfidzList: [
@@ -454,14 +454,14 @@
           }
         },
         {
-          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: 'Tilawah Al-Qur'an',
+          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: "Tilawah Al-Qur'an",
           tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 91, barab: 91, mulaqu: 95,
           doaList: [{ title: '1. Al Ma’tsurat', score: 98 }],
           tahfidzList: [{ juzGroup: 'Juz 1', surah: 'Q.S Al Baqarah ayat 85 - 93', score: 85 }],
           icp: null
         },
         {
-          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: 'Tilawah Al-Qur'an',
+          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: "Tilawah Al-Qur'an",
           tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 88, barab: 92, mulaqu: 95,
           doaList: [
             { title: '1. Al Ma’tsurat', score: 98 },
@@ -491,6 +491,47 @@
 
     function saveDB() {
       localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(db));
+      pushToGoogleSheets(db.students);
+    }
+
+    // =========================================================================
+    // SINKRONISASI GOOGLE SHEETS (OPSIONAL)
+    // =========================================================================
+    async function syncFromGoogleSheets() {
+      if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
+      const badge = document.getElementById('modeBadge');
+      badge.textContent = 'Menyinkronkan Sheets...';
+      try {
+        const res = await fetch(APP_CONFIG.SHEETS_WEB_APP_URL);
+        const json = await res.json();
+        if (json.status === 'success') {
+          if (json.students && json.students.length > 0) {
+            db.students = json.students;
+            localStorage.setItem(APP_CONFIG.STORAGE_KEY, JSON.stringify(db));
+            initSelectors();
+          } else {
+            await pushToGoogleSheets(db.students);
+          }
+          badge.textContent = 'Terhubung Google Sheets ✓';
+          badge.className = 'bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded';
+        }
+      } catch (err) {
+        badge.textContent = 'Offline (Lokal Cache)';
+      }
+    }
+
+    async function pushToGoogleSheets(studentsArray) {
+      if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
+      try {
+        await fetch(APP_CONFIG.SHEETS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ students: studentsArray })
+        });
+      } catch (e) {
+        console.warn('Gagal mengirim ke Sheets, tersimpan di lokal:', e);
+      }
     }
 
     // =========================================================================
@@ -1188,7 +1229,7 @@
           </style>
         </head>
         <body><div class="Section1">${htmlBody}</div></body></html>`;
-      const blob = new Blob(['﻿', fullHtml], { type: 'application/msword' });
+      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1361,6 +1402,7 @@
     }
 
     initSelectors();
+    syncFromGoogleSheets();
   </script>
 </body>
 </html>
