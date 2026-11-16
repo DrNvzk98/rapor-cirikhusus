@@ -14,9 +14,31 @@
     .tab-active { background-color: #065f46; color: #ffffff; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* PENGATURAN CETAK PDF / PRINT A4 1 SISWA = 1 LEMBAR */
+    @page {
+      size: A4 portrait;
+      margin: 10mm 14mm 10mm 16mm;
+    }
     @media print {
+      body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
       .no-print { display: none !important; }
-      body { background: white; }
+      #print-area { display: block !important; width: 100% !important; }
+      .rapor-sheet {
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+      .rapor-sheet:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
     }
   </style>
 </head>
@@ -29,7 +51,7 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="bg-amber-400 text-emerald-950 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">PWA Ready</span>
-            <span id="modeBadge" class="bg-emerald-700 text-emerald-100 text-[10px] font-semibold px-2 py-0.5 rounded">Mode Uji Coba (Lokal)</span>
+            <span id="modeBadge" class="bg-emerald-700 text-emerald-100 text-[10px] font-semibold px-2 py-0.5 rounded">Mode Lokal / Sheets</span>
           </div>
           <h1 class="text-base sm:text-lg font-bold tracking-tight mt-0.5">Rapor Ciri Khusus & Tahfidz</h1>
         </div>
@@ -40,10 +62,8 @@
 
       <!-- SELECTOR SEKOLAH & PENGAMPU -->
       <div class="grid grid-cols-2 gap-2 text-xs">
-        <select id="selectSchool" onchange="handleSchoolChange()" class="bg-emerald-800 border border-emerald-700 text-white rounded-lg px-2.5 py-1.5 font-medium focus:outline-none">
-        </select>
-        <select id="selectTeacher" onchange="handleTeacherChange()" class="bg-emerald-800 border border-emerald-700 text-white rounded-lg px-2.5 py-1.5 font-medium focus:outline-none">
-        </select>
+        <select id="selectSchool" onchange="handleSchoolChange()" class="bg-emerald-800 border border-emerald-700 text-white rounded-lg px-2.5 py-1.5 font-medium focus:outline-none"></select>
+        <select id="selectTeacher" onchange="handleTeacherChange()" class="bg-emerald-800 border border-emerald-700 text-white rounded-lg px-2.5 py-1.5 font-medium focus:outline-none"></select>
       </div>
     </div>
 
@@ -57,10 +77,10 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main class="max-w-5xl mx-auto px-4 pt-4">
+  <main class="max-w-5xl mx-auto px-4 pt-4 no-print">
 
     <!-- NAVIGATION TABS -->
-    <nav class="grid grid-cols-4 gap-1.5 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 mb-4 no-print">
+    <nav class="grid grid-cols-4 gap-1.5 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 mb-4">
       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-active py-2 px-2 rounded-lg text-xs sm:text-sm font-bold transition">📊 Progres</button>
       <button onclick="switchTab('input')" id="tab-input" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">✍️ Input Nilai</button>
       <button onclick="switchTab('rapor')" id="tab-rapor" class="py-2 px-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 transition">📄 Cetak Rapor</button>
@@ -92,16 +112,18 @@
         </div>
       </div>
 
-      <!-- FAST TRACK MONITORING -->
+      <!-- FAST TRACK MONITORING & REKAP EXCEL -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 class="font-bold text-slate-800 text-sm sm:text-base">Fast Track Capaian Ngaji Ummi & Hafalan Siswa</h2>
             <p class="text-xs text-slate-500">Pantau posisi jilid Ummi dan target hafalan tiap anak secara cepat.</p>
           </div>
-          <button onclick="exportClassExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm">
-            📥 Download Leger Excel (.xlsx)
-          </button>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="exportClassExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm">
+              📊 Rekap Nilai Excel (.xlsx)
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
@@ -274,33 +296,49 @@
 
     <!-- ==================== TAB 3: PREVIEW & EXPORT RAPOR ==================== -->
     <section id="view-rapor" class="hidden space-y-4">
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
-        <div class="flex flex-wrap items-center gap-2">
-          <select id="selectStudentRapor" onchange="renderRaporPreview()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold"></select>
-          <select id="selectRaporType" onchange="renderRaporPreview()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold text-emerald-800">
-            <option value="cirikhusus">Rapor Ciri Khusus / Tahfidz</option>
-            <option value="icp_english">Student Learning Report (ICP English)</option>
-          </select>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="selectStudentRapor" onchange="renderRaporPreview()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold"></select>
+            <select id="selectRaporType" onchange="renderRaporPreview()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold text-emerald-800">
+              <option value="cirikhusus">Rapor Ciri Khusus / Tahfidz</option>
+              <option value="icp_english">Student Learning Report (ICP English)</option>
+            </select>
+          </div>
+          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+            ✓ Tata Letak Padat: 1 Siswa = 1 Lembar A4 + Kop Resmi
+          </span>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="exportWordSingle()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg">
+
+        <!-- TOMBOL UNDUH LENGKAP: 1 SISWA, 1 KELAS (WORD & PDF), & REKAP EXCEL -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-100">
+          <button onclick="exportWordSingle()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-1">
             📝 Word (1 Siswa)
           </button>
-          <button onclick="exportWordAllClass()" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-3 py-2 rounded-lg">
-            📚 Word (1 Kelas Gabungan)
+          <button onclick="printPdfSingle()" class="bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-1">
+            📕 PDF (1 Siswa)
+          </button>
+          <button onclick="exportWordAllClass()" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-1">
+            📚 Word (1 Kelas)
+          </button>
+          <button onclick="printPdfAllClass()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-1">
+            🖨️ PDF (1 Kelas)
+          </button>
+          <button onclick="exportClassExcel()" class="col-span-2 sm:col-span-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center justify-center gap-1">
+            📊 Rekap Excel
           </button>
         </div>
       </div>
 
       <!-- AREA PREVIEW DOKUMEN RAPOR -->
-      <div id="raporPreviewContainer" class="bg-white p-6 sm:p-10 rounded-xl border border-slate-300 shadow-sm max-w-3xl mx-auto overflow-x-auto">
+      <div id="raporPreviewContainer" class="bg-white p-5 sm:p-8 rounded-xl border border-slate-300 shadow-sm max-w-[210mm] mx-auto overflow-x-auto">
       </div>
     </section>
 
     <!-- ==================== TAB 4: PENGATURAN & BACKUP ==================== -->
     <section id="view-settings" class="hidden space-y-4">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h3 class="font-bold text-sm text-slate-800">Profil Kepala Sekolah & Unit Sekolah</h3>
+        <h3 class="font-bold text-sm text-slate-800">Profil Kepala Sekolah, Kop Surat & Unit Sekolah</h3>
         <div id="schoolSettingsList" class="space-y-3"></div>
       </div>
 
@@ -313,8 +351,7 @@
       </div>
 
       <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
-        <h3 class="font-bold text-xs text-amber-900 uppercase">Cadangkan / Pindah Data Uji Coba GitHub (JSON)</h3>
-        <p class="text-[11px] text-amber-800">Karena GitHub Pages menyimpan data di browser HP/Laptop masing-masing, gunakan tombol ini untuk memindahkan data antar perangkat sebelum migrasi ke Hostinger.</p>
+        <h3 class="font-bold text-xs text-amber-900 uppercase">Cadangkan / Pindah Data Uji Coba (JSON)</h3>
         <div class="flex flex-wrap gap-2 pt-1">
           <button onclick="downloadBackupJSON()" class="bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">⬇️ Download Backup JSON</button>
           <label class="bg-white border border-amber-400 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer">
@@ -328,23 +365,44 @@
 
   </main>
 
+  <!-- AREA KHUSUS CETAK PDF / PRINT (TERSEMBUNYI DI LAYAR, MUNCUL SAAT SAVE AS PDF / PRINT) -->
+  <div id="print-area" class="hidden"></div>
+
   <script>
     // =========================================================================
-    // KONFIGURASI HYBRID MODE (GITHUB PAGES vs HOSTINGER MYSQL)
+    // KONFIGURASI APLIKASI
     // =========================================================================
     const APP_CONFIG = {
-      USE_API: false, // Ubah ke true saat sudah di-upload ke Hostinger bersama api.php
-      API_URL: './api.php',
-      STORAGE_KEY: 'rapor_muh_temanggung_v1'
+      USE_GOOGLE_SHEETS: false,
+      SHEETS_WEB_APP_URL: '',
+      STORAGE_KEY: 'rapor_muh_temanggung_v2'
     };
 
     // =========================================================================
-    // DATA AWAL (SEEDER SESUAI SAMPEL SD MUHAMMADIYAH TEMANGGUNG & SD MUH 1)
+    // DATA AWAL (SEEDER LENGKAP DENGAN KOP SURAT RESMI SEKOLAH)
     // =========================================================================
     const DEFAULT_DB = {
       schools: [
-        { id: 1, name: 'SD Muhammadiyah Temanggung', address: 'Jl. Mujahidin No. 26 Temanggung Telp. (0293) 492635', principal: 'Triana Widiastuti, S.Pd.', principalNbm: '1.355.255' },
-        { id: 2, name: 'SD Muhammadiyah 1 Temanggung', address: 'Temanggung, Jawa Tengah', principal: 'Kepala Sekolah SD Muh 1 Temanggung', principalNbm: '1.400.112' }
+        {
+          id: 1,
+          name: 'SD Muhammadiyah Temanggung',
+          majelis: 'MAJLIS PENDIDIKAN DASAR DAN MENENGAH DAN PNF',
+          pcm: 'PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG',
+          akreditasi: '( Terakreditasi A )',
+          address: 'Alamat : Jl. Mujahidin No. 26 Temanggung Telp. (0293)492635 Email. sdmuhammadiyah001@gmail.com',
+          principal: 'Triana Widiastuti, S.Pd.',
+          principalNbm: '1.355.255'
+        },
+        {
+          id: 2,
+          name: 'SD Muhammadiyah 1 Temanggung',
+          majelis: 'MAJLIS PENDIDIKAN DASAR DAN MENENGAH DAN PNF',
+          pcm: 'PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG',
+          akreditasi: '( Terakreditasi A )',
+          address: 'Alamat : Temanggung, Jawa Tengah',
+          principal: 'Kepala Sekolah SD Muh 1 Temanggung',
+          principalNbm: '1.400.112'
+        }
       ],
       teachers: [
         { id: 2, schoolId: 1, name: 'Purwati, S.I.Pust', nbm: '1.372.967' },
@@ -359,14 +417,14 @@
       ],
       students: [
         {
-          id: 101, schoolId: 1, classId: 1, name: 'Abisatya Putra Dewangga', ummiGrade: 'Tilawah Al-Qur\'an',
+          id: 101, schoolId: 1, classId: 1, name: 'Abisatya Putra Dewangga', ummiGrade: 'Tilawah Al-Qur'an',
           tilawahTarget: 'Tilawah', tilawahScore: 73, kemuh: 78, barab: 77, mulaqu: 79,
           doaList: [{ title: 'Al Ma’tsurat', score: 94 }],
           tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 98 }],
           icp: null
         },
         {
-          id: 102, schoolId: 1, classId: 1, name: 'Nadhifa Firza Khairani Hidayat', ummiGrade: 'Tilawah Al-Qur\'an',
+          id: 102, schoolId: 1, classId: 1, name: 'Nadhifa Firza Khairani Hidayat', ummiGrade: 'Tilawah Al-Qur'an',
           tilawahTarget: 'Tilawah', tilawahScore: 86, kemuh: 82, barab: 81, mulaqu: 85,
           doaList: [{ title: 'Al Ma’tsurat', score: 87 }],
           tahfidzList: [
@@ -396,14 +454,14 @@
           }
         },
         {
-          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: 'Tilawah Al-Qur\'an',
+          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: 'Tilawah Al-Qur'an',
           tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 91, barab: 91, mulaqu: 95,
           doaList: [{ title: '1. Al Ma’tsurat', score: 98 }],
           tahfidzList: [{ juzGroup: 'Juz 1', surah: 'Q.S Al Baqarah ayat 85 - 93', score: 85 }],
           icp: null
         },
         {
-          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: 'Tilawah Al-Qur\'an',
+          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: 'Tilawah Al-Qur'an',
           tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 88, barab: 92, mulaqu: 95,
           doaList: [
             { title: '1. Al Ma’tsurat', score: 98 },
@@ -644,17 +702,14 @@
       updateLiveHelper('inpBArab', 'helpBArab');
       updateLiveHelper('inpMulaqu', 'helpMulaqu');
 
-      // Render Baris Hafalan Dinamis
       const tContainer = document.getElementById('tahfidzRowsContainer');
       tContainer.innerHTML = '';
       (st.tahfidzList || []).forEach(item => addTahfidzRow(item.juzGroup, item.surah, item.score));
 
-      // Render Baris Doa Dinamis
       const dContainer = document.getElementById('doaRowsContainer');
       dContainer.innerHTML = '';
       (st.doaList || []).forEach(item => addDoaRow(item.title, item.score));
 
-      // Tampilkan Form ICP jika kelas program ICP
       const icpBox = document.getElementById('icpSectionBox');
       if (cls.program === 'ICP') {
         icpBox.classList.remove('hidden');
@@ -688,7 +743,7 @@
       div.className = 'flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 doa-row';
       div.innerHTML = `
         <input type="text" placeholder="Nama Doa / Hadits (Mis: Al Ma'tsurat)" value="${title}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-doa-title" />
-        <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-center inp-doa-score" />
+        <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-bold text-center inp-doa-score" />
         <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:bg-rose-100 px-2 py-1 rounded text-xs font-bold">✕</button>
       `;
       document.getElementById('doaRowsContainer').appendChild(div);
@@ -750,7 +805,7 @@
     }
 
     // =========================================================================
-    // IMPORT & EXPORT EXCEL (.XLSX)
+    // IMPORT & EXPORT REKAP EXCEL (.XLSX)
     // =========================================================================
     function downloadExcelTemplate() {
       const cls = db.classes.find(c => c.id === state.classId);
@@ -815,9 +870,11 @@
 
     function exportClassExcel() {
       const cls = db.classes.find(c => c.id === state.classId);
+      const school = db.schools.find(sc => sc.id === state.schoolId);
       const students = db.students.filter(s => s.classId === state.classId);
       const rows = students.map((s, idx) => ({
         NO: idx + 1,
+        SEKOLAH: school.name,
         NAMA_SISWA: s.name,
         KELAS: cls.name,
         PROGRAM: cls.program,
@@ -832,36 +889,66 @@
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Leger_Ciri_Khusus');
-      XLSX.writeFile(wb, `Leger_Rapor_${cls.name.replace(/\s+/g, '_')}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, 'Rekap_Nilai');
+      XLSX.writeFile(wb, `Rekap_Nilai_${cls.name.replace(/\s+/g, '_')}.xlsx`);
     }
 
     // =========================================================================
-    // TAB 3: GENERATOR HTML RAPOR & EKSPOR WORD (.DOC)
+    // TAB 3: GENERATOR KOP SURAT + RAPOR PADAT 1 SISWA = 1 LEMBAR A4
     // =========================================================================
-    function generateStudentRaporHTML(st, cls, school, teacher, type) {
+    function generateKopSuratHTML(school) {
+      return `
+        <table style="width: 100%; border-collapse: collapse; border-bottom: 2.5pt double #000000; margin-bottom: 8px; padding-bottom: 4px;">
+          <tr>
+            <td style="width: 14%; text-align: center; vertical-align: middle; padding-bottom: 4px;">
+              <div style="width: 52px; height: 52px; border: 1.5pt solid #065f46; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 7pt; color: #065f46; line-height: 1.1; text-align: center;">
+                LOGO<br/>SD MUH
+              </div>
+            </td>
+            <td style="width: 86%; text-align: center; vertical-align: middle; padding-bottom: 4px; line-height: 1.15;">
+              <div style="font-size: 9.5pt; font-weight: bold; letter-spacing: 0.3px;">${school.majelis || 'MAJLIS PENDIDIKAN DASAR DAN MENENGAH DAN PNF'}</div>
+              <div style="font-size: 9.5pt; font-weight: bold; letter-spacing: 0.3px;">${school.pcm || 'PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG'}</div>
+              <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px;">${school.name.toUpperCase()}</div>
+              <div style="font-size: 8.5pt; font-weight: bold;">${school.akreditasi || '( Terakreditasi A )'}</div>
+              <div style="font-size: 7.5pt; font-style: italic;">${school.address}</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
+
+    function generateStudentRaporHTML(st, cls, school, teacher, type, isLastStudent = true) {
+      const pageBreakStyle = isLastStudent ? '' : 'page-break-after: always; break-after: page;';
+      const kopHtml = generateKopSuratHTML(school);
+
+      // FORMAT ICP ENGLISH LEARNING REPORT (1 LEMBAR PADAT)
       if (type === 'icp_english' && cls.program === 'ICP') {
         const icp = st.icp || { vocab: 90, listening: 90, speaking: 90, reading: 90, remarks: 'Keep up the good work.' };
         return `
-          <div style="font-family: 'Times New Roman', serif; color: #000; page-break-after: always;">
-            <div style="text-align: center; border-bottom: 3px double #000; padding-bottom: 8px; margin-bottom: 14px;">
-              <div style="font-size: 11pt; font-weight: bold;">MAJELIS PENDIDIKAN DASAR MENENGAH DAN PNF</div>
-              <div style="font-size: 11pt; font-weight: bold;">PIMPINAN CABANG MUHAMMADIYAH TEMANGGUNG</div>
-              <div style="font-size: 14pt; font-weight: bold;">${school.name.toUpperCase()}</div>
-              <div style="font-size: 9pt;">Alamat: ${school.address}</div>
-            </div>
-            <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 12px;">
+          <div class="rapor-sheet" style="font-family: 'Times New Roman', serif; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
+            ${kopHtml}
+            <div style="text-align: center; font-weight: bold; font-size: 10.5pt; line-height: 1.2; margin-bottom: 8px;">
               STUDENT LEARNING REPORT<br/>INTERNATIONAL CLASS PROGRAM<br/>ACADEMIC YEAR ${cls.year}
             </div>
-            <table style="width: 100%; font-size: 10.5pt; margin-bottom: 10px; border: none;">
-              <tr><td style="width: 15%;"><strong>Student</strong></td><td style="width: 45%;">: ${st.name}</td><td style="width: 15%;"><strong>Grade</strong></td><td>: ${cls.grade} (${cls.name})</td></tr>
-              <tr><td><strong>Teacher</strong></td><td>: ${cls.homeroom}</td><td><strong>Semester</strong></td><td>: 2nd Semester</td></tr>
+            <table style="width: 100%; font-size: 9.5pt; margin-bottom: 6px; border: none; border-collapse: collapse;">
+              <tr>
+                <td style="width: 14%; padding: 1px 0;"><strong>Student</strong></td>
+                <td style="width: 48%; padding: 1px 0;">: ${st.name}</td>
+                <td style="width: 15%; padding: 1px 0;"><strong>Grade</strong></td>
+                <td style="width: 23%; padding: 1px 0;">: ${cls.grade} (${cls.name})</td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 0;"><strong>Teacher</strong></td>
+                <td style="padding: 1px 0;">: ${cls.homeroom}</td>
+                <td style="padding: 1px 0;"><strong>Semester</strong></td>
+                <td style="padding: 1px 0;">: 2nd Semester</td>
+              </tr>
             </table>
-            <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; font-size: 10pt;">
-              <thead style="background: #f1f5f9;">
-                <tr>
-                  <th style="width: 22%;">LEARNING</th>
-                  <th style="width: 48%;">PERFORMANCE SUMMARY</th>
+            <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.2;">
+              <thead>
+                <tr style="background: #f1f5f9;">
+                  <th style="width: 20%;">LEARNING</th>
+                  <th style="width: 50%;">PERFORMANCE SUMMARY</th>
                   <th style="width: 14%;">QUARTERLY GRADE</th>
                   <th style="width: 16%;">GRADING SYSTEM</th>
                 </tr>
@@ -873,20 +960,20 @@
                 <tr><td><strong>Reading Readiness</strong></td><td>${getIcpSkillDesc('reading', icp.reading)}</td><td style="text-align:center; font-weight:bold;">${icp.reading}</td><td style="text-align:center;">${getIcpGradeLabel(icp.reading)}</td></tr>
               </tbody>
             </table>
-            <div style="border: 1px solid #000; padding: 8px; margin-top: 12px; font-size: 10pt;">
+            <div style="border: 1px solid #000; padding: 6px 8px; margin-top: 8px; font-size: 9pt; line-height: 1.25;">
               <strong>Feedback and Remarks:</strong><br/>${icp.remarks}
             </div>
-            <table style="width: 100%; margin-top: 24px; font-size: 10.5pt; border: none;">
+            <table style="width: 100%; margin-top: 14px; font-size: 9.5pt; border: none; border-collapse: collapse;">
               <tr>
-                <td style="width: 50%; text-align: center;">Principal,<br/><br/><br/><br/><u><strong>${school.principal}</strong></u><br/>NBM. ${school.principalNbm}</td>
-                <td style="width: 50%; text-align: center;">${cls.date}<br/>Teacher,<br/><br/><br/><u><strong>${cls.homeroom}</strong></u><br/>NBM. ${cls.homeroomNbm}</td>
+                <td style="width: 50%; text-align: center; vertical-align: top;">Principal,<br/><br/><br/><u><strong>${school.principal}</strong></u><br/>NBM. ${school.principalNbm}</td>
+                <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Teacher,<br/><br/><br/><u><strong>${cls.homeroom}</strong></u><br/>NBM. ${cls.homeroomNbm}</td>
               </tr>
             </table>
           </div>
         `;
       }
 
-      // FORMAT 2: PROGRAM KHUSUS TAHFIDZ (1 TABEL UTAMA NOMOR 1-4)
+      // FORMAT 2: PROGRAM KHUSUS TAHFIDZ (1 TABEL UTAMA NOMOR 1-4, 1 LEMBAR PADAT)
       if (cls.program === 'Tahfidz') {
         const groupedJuz = {};
         (st.tahfidzList || []).forEach(t => {
@@ -897,138 +984,160 @@
 
         let tahfidzRowsHtml = '';
         Object.keys(groupedJuz).forEach(juz => {
-          tahfidzRowsHtml += `<tr><td></td><td colspan="4" style="font-weight:bold; background:#f8fafc;">${juz}</td></tr>`;
-          groupedJuz[juz].forEach((item, i) => {
+          tahfidzRowsHtml += `<tr><td style="padding:2px 4px;"></td><td colspan="4" style="font-weight:bold; background:#f8fafc; padding:2px 5px;">${juz}</td></tr>`;
+          groupedJuz[juz].forEach((item) => {
             tahfidzRowsHtml += `
               <tr>
-                <td></td>
-                <td>${item.surah}</td>
-                <td style="text-align:center;">${item.score}</td>
-                <td>${angkaKeTerbilang(item.score)}</td>
-                <td style="text-align:center;">${getPredikat(item.score)}</td>
+                <td style="padding:2px 4px;"></td>
+                <td style="padding:2px 5px;">${item.surah}</td>
+                <td style="text-align:center; padding:2px 4px;">${item.score}</td>
+                <td style="padding:2px 5px;">${angkaKeTerbilang(item.score)}</td>
+                <td style="text-align:center; padding:2px 4px;">${getPredikat(item.score)}</td>
               </tr>`;
           });
         });
 
         const doaRowsHtml = (st.doaList || []).map(d => `
           <tr>
-            <td></td>
-            <td>${d.title}</td>
-            <td style="text-align:center;">${d.score}</td>
-            <td>${angkaKeTerbilang(d.score)}</td>
-            <td style="text-align:center;">${getPredikat(d.score)}</td>
+            <td style="padding:2px 4px;"></td>
+            <td style="padding:2px 5px;">${d.title}</td>
+            <td style="text-align:center; padding:2px 4px;">${d.score}</td>
+            <td style="padding:2px 5px;">${angkaKeTerbilang(d.score)}</td>
+            <td style="text-align:center; padding:2px 4px;">${getPredikat(d.score)}</td>
           </tr>`).join('');
 
         return `
-          <div style="font-family: 'Times New Roman', serif; color: #000; page-break-after: always;">
-            <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 14px;">
-              LAPORAN HASIL CAPAIAN TARGET<br/>CIRI KHUSUS ${school.name.toUpperCase()}<br/>TAHUN AJARAN ${cls.year}<br/>SEMESTER ${cls.semester}
+          <div class="rapor-sheet" style="font-family: 'Times New Roman', serif; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
+            ${kopHtml}
+            <div style="text-align: center; font-weight: bold; font-size: 10.5pt; line-height: 1.2; margin-bottom: 8px;">
+              LAPORAN HASIL CAPAIAN TARGET CIRI KHUSUS<br/>${school.name.toUpperCase()}<br/>TAHUN AJARAN ${cls.year} &bull; SEMESTER ${cls.semester}
             </div>
-            <table style="width: 100%; font-size: 11pt; margin-bottom: 10px; border: none;">
-              <tr><td style="width: 22%;">Nama Siswa</td><td>: <strong>${st.name}</strong></td></tr>
-              <tr><td>Kelas / Grade Ummi</td><td>: ${cls.name} (${st.ummiGrade})</td></tr>
+            <table style="width: 100%; font-size: 9.5pt; margin-bottom: 6px; border: none; border-collapse: collapse;">
+              <tr>
+                <td style="width: 16%; padding: 1px 0;">Nama Siswa</td>
+                <td style="width: 46%; padding: 1px 0;">: <strong>${st.name}</strong></td>
+                <td style="width: 16%; padding: 1px 0;">Kelas</td>
+                <td style="width: 22%; padding: 1px 0;">: ${cls.name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 0;">Program</td>
+                <td style="padding: 1px 0;">: ${cls.program}</td>
+                <td style="padding: 1px 0;">Grade Ummi</td>
+                <td style="padding: 1px 0;">: ${st.ummiGrade}</td>
+              </tr>
             </table>
-            <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse; font-size: 10.5pt;">
+            <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15;">
               <thead>
                 <tr style="background: #f1f5f9;">
-                  <th style="width: 6%;">NO</th>
-                  <th style="width: 44%;">CAPAIAN TARGET</th>
-                  <th style="width: 12%;">NILAI ANGKA</th>
-                  <th style="width: 28%;">NILAI HURUF</th>
-                  <th style="width: 10%;">KET</th>
+                  <th style="width: 6%; padding: 3px;">NO</th>
+                  <th style="width: 44%; padding: 3px;">CAPAIAN TARGET</th>
+                  <th style="width: 12%; padding: 3px;">NILAI ANGKA</th>
+                  <th style="width: 28%; padding: 3px;">NILAI HURUF</th>
+                  <th style="width: 10%; padding: 3px;">KET</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style="text-align:center; font-weight:bold;">1.</td>
-                  <td><strong>Tilawah</strong><br/>${st.tilawahTarget}</td>
-                  <td style="text-align:center;">${st.tilawahScore ?? '-'}</td>
-                  <td>${angkaKeTerbilang(st.tilawahScore)}</td>
-                  <td style="text-align:center;">${getPredikat(st.tilawahScore)}</td>
+                  <td style="text-align:center; font-weight:bold; padding:2px 4px;">1.</td>
+                  <td style="padding:2px 5px;"><strong>Tilawah</strong> (${st.tilawahTarget})</td>
+                  <td style="text-align:center; padding:2px 4px;">${st.tilawahScore ?? '-'}</td>
+                  <td style="padding:2px 5px;">${angkaKeTerbilang(st.tilawahScore)}</td>
+                  <td style="text-align:center; padding:2px 4px;">${getPredikat(st.tilawahScore)}</td>
                 </tr>
-                <tr><td style="text-align:center; font-weight:bold;">2.</td><td colspan="4"><strong>Hafalan Al Qur’an</strong></td></tr>
+                <tr><td style="text-align:center; font-weight:bold; padding:2px 4px;">2.</td><td colspan="4" style="padding:2px 5px;"><strong>Hafalan Al Qur’an</strong></td></tr>
                 ${tahfidzRowsHtml}
-                <tr><td style="text-align:center; font-weight:bold;">3.</td><td colspan="4"><strong>Do’a Harian</strong></td></tr>
+                <tr><td style="text-align:center; font-weight:bold; padding:2px 4px;">3.</td><td colspan="4" style="padding:2px 5px;"><strong>Do’a Harian & Hadits</strong></td></tr>
                 ${doaRowsHtml}
-                <tr><td style="text-align:center; font-weight:bold;">4.</td><td colspan="4"><strong>Mapel Ciri Khusus</strong></td></tr>
-                <tr><td></td><td>1. Pendidikan Kemuhammadiyahan</td><td style="text-align:center;">${st.kemuh ?? '-'}</td><td>${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center;">${getPredikat(st.kemuh)}</td></tr>
-                <tr><td></td><td>2. Bahasa Arab</td><td style="text-align:center;">${st.barab ?? '-'}</td><td>${angkaKeTerbilang(st.barab)}</td><td style="text-align:center;">${getPredikat(st.barab)}</td></tr>
-                <tr><td></td><td>3. MULAQU</td><td style="text-align:center;">${st.mulaqu ?? '-'}</td><td>${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center;">${getPredikat(st.mulaqu)}</td></tr>
+                <tr><td style="text-align:center; font-weight:bold; padding:2px 4px;">4.</td><td colspan="4" style="padding:2px 5px;"><strong>Mapel Ciri Khusus</strong></td></tr>
+                <tr><td style="padding:2px 4px;"></td><td style="padding:2px 5px;">1. Pendidikan Kemuhammadiyahan</td><td style="text-align:center; padding:2px 4px;">${st.kemuh ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center; padding:2px 4px;">${getPredikat(st.kemuh)}</td></tr>
+                <tr><td style="padding:2px 4px;"></td><td style="padding:2px 5px;">2. Bahasa Arab</td><td style="text-align:center; padding:2px 4px;">${st.barab ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.barab)}</td><td style="text-align:center; padding:2px 4px;">${getPredikat(st.barab)}</td></tr>
+                <tr><td style="padding:2px 4px;"></td><td style="padding:2px 5px;">3. MULAQU</td><td style="text-align:center; padding:2px 4px;">${st.mulaqu ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center; padding:2px 4px;">${getPredikat(st.mulaqu)}</td></tr>
               </tbody>
             </table>
-            <table style="width: 100%; margin-top: 24px; font-size: 10.5pt; border: none;">
+            <table style="width: 100%; margin-top: 14px; font-size: 9.5pt; border: none; border-collapse: collapse;">
               <tr>
-                <td style="width: 50%; text-align: center;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
-                <td style="width: 50%; text-align: center;"><br/>Ustadz/dzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
+                <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
+                <td style="width: 50%; text-align: center; vertical-align: top;"><br/>Ustadz/Ustadzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
               </tr>
             </table>
           </div>
         `;
       }
 
-      // FORMAT 1: MULTI TALENT & ICP TAHFIDZ (TERBAGI 4 BAGIAN A, B, C, D)
+      // FORMAT 1: MULTI TALENT & ICP TAHFIDZ (4 BAGIAN A, B, C, D — PADAT 1 LEMBAR A4)
       const doaMultiRows = (st.doaList || []).map((d, i) => `
         <tr>
-          <td style="text-align:center;">${i + 1}</td>
-          <td>${d.title}</td>
-          <td style="text-align:center;">${d.score}</td>
-          <td>${angkaKeTerbilang(d.score)}</td>
-          <td style="text-align:center;">${getPredikat(d.score)}</td>
+          <td style="text-align:center; padding:2px 4px;">${i + 1}</td>
+          <td style="padding:2px 5px;">${d.title}</td>
+          <td style="text-align:center; padding:2px 4px;">${d.score}</td>
+          <td style="padding:2px 5px;">${angkaKeTerbilang(d.score)}</td>
+          <td style="text-align:center; padding:2px 4px;">${getPredikat(d.score)}</td>
         </tr>`).join('');
 
       const tahfidzMultiRows = (st.tahfidzList || []).map((t, i) => `
         <tr>
-          <td style="text-align:center;">${i + 1}</td>
-          <td>${t.surah}</td>
-          <td style="text-align:center;">${t.score}</td>
-          <td>${angkaKeTerbilang(t.score)}</td>
-          <td style="text-align:center;">${getPredikat(t.score)}</td>
+          <td style="text-align:center; padding:2px 4px;">${i + 1}</td>
+          <td style="padding:2px 5px;">${t.surah}</td>
+          <td style="text-align:center; padding:2px 4px;">${t.score}</td>
+          <td style="padding:2px 5px;">${angkaKeTerbilang(t.score)}</td>
+          <td style="text-align:center; padding:2px 4px;">${getPredikat(t.score)}</td>
         </tr>`).join('');
 
       return `
-        <div style="font-family: 'Times New Roman', serif; color: #000; page-break-after: always;">
-          <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 14px;">
-            LAPORAN HASIL CAPAIAN TARGET<br/>CIRI KHUSUS ${school.name.toUpperCase()}<br/>TAHUN PELAJARAN ${cls.year}<br/>SEMESTER ${cls.semester}
+        <div class="rapor-sheet" style="font-family: 'Times New Roman', serif; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
+          ${kopHtml}
+          <div style="text-align: center; font-weight: bold; font-size: 10.5pt; line-height: 1.2; margin-bottom: 8px;">
+            LAPORAN HASIL CAPAIAN TARGET CIRI KHUSUS<br/>${school.name.toUpperCase()}<br/>TAHUN PELAJARAN ${cls.year} &bull; SEMESTER ${cls.semester}
           </div>
-          <table style="width: 100%; font-size: 11pt; margin-bottom: 10px; border: none;">
-            <tr><td style="width: 22%;">Nama Siswa</td><td>: <strong>${st.name}</strong></td></tr>
-            <tr><td>Kelas / Grade Ummi</td><td>: ${cls.name} (${st.ummiGrade})</td></tr>
+          <table style="width: 100%; font-size: 9.5pt; margin-bottom: 6px; border: none; border-collapse: collapse;">
+            <tr>
+              <td style="width: 16%; padding: 1px 0;">Nama Siswa</td>
+              <td style="width: 46%; padding: 1px 0;">: <strong>${st.name}</strong></td>
+              <td style="width: 16%; padding: 1px 0;">Kelas</td>
+              <td style="width: 22%; padding: 1px 0;">: ${cls.name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 1px 0;">Program</td>
+              <td style="padding: 1px 0;">: ${cls.program}</td>
+              <td style="padding: 1px 0;">Grade Ummi</td>
+              <td style="padding: 1px 0;">: ${st.ummiGrade}</td>
+            </tr>
           </table>
 
-          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">A. MAPEL CIRI KHUSUS</div>
-          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 8px;">
-            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">MATA PELAJARAN</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">A. MAPEL CIRI KHUSUS</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15; margin-bottom: 5px;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">MATA PELAJARAN</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>
-              <tr><td style="text-align:center;">1</td><td>Pendidikan Kemuhammadiyahan</td><td style="text-align:center;">${st.kemuh ?? '-'}</td><td>${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center;">${getPredikat(st.kemuh)}</td></tr>
-              <tr><td style="text-align:center;">2</td><td>Bahasa Arab</td><td style="text-align:center;">${st.barab ?? '-'}</td><td>${angkaKeTerbilang(st.barab)}</td><td style="text-align:center;">${getPredikat(st.barab)}</td></tr>
-              <tr><td style="text-align:center;">3</td><td>Mulaqu</td><td style="text-align:center;">${st.mulaqu ?? '-'}</td><td>${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center;">${getPredikat(st.mulaqu)}</td></tr>
+              <tr><td style="text-align:center; padding:2px;">1</td><td style="padding:2px 5px;">Pendidikan Kemuhammadiyahan</td><td style="text-align:center; padding:2px;">${st.kemuh ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.kemuh)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.kemuh)}</td></tr>
+              <tr><td style="text-align:center; padding:2px;">2</td><td style="padding:2px 5px;">Bahasa Arab</td><td style="text-align:center; padding:2px;">${st.barab ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.barab)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.barab)}</td></tr>
+              <tr><td style="text-align:center; padding:2px;">3</td><td style="padding:2px 5px;">Mulaqu</td><td style="text-align:center; padding:2px;">${st.mulaqu ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.mulaqu)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.mulaqu)}</td></tr>
             </tbody>
           </table>
 
-          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">B. DOA SEHARI HARI</div>
-          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 8px;">
-            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">TARGET DOA</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">B. DOA SEHARI HARI & HADITS</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15; margin-bottom: 5px;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">TARGET DOA / HADITS</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>${doaMultiRows}</tbody>
           </table>
 
-          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">C. BACAAN</div>
-          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 8px;">
-            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">AL QURAN</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">C. BACAAN AL-QUR'AN</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15; margin-bottom: 5px;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">AL QURAN / GRADE UMMI</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>
-              <tr><td style="text-align:center;">1</td><td>${st.tilawahTarget || 'Tilawah'}</td><td style="text-align:center;">${st.tilawahScore ?? '-'}</td><td>${angkaKeTerbilang(st.tilawahScore)}</td><td style="text-align:center;">${getPredikat(st.tilawahScore)}</td></tr>
+              <tr><td style="text-align:center; padding:2px;">1</td><td style="padding:2px 5px;">${st.tilawahTarget || 'Tilawah'} (${st.ummiGrade})</td><td style="text-align:center; padding:2px;">${st.tilawahScore ?? '-'}</td><td style="padding:2px 5px;">${angkaKeTerbilang(st.tilawahScore)}</td><td style="text-align:center; padding:2px;">${getPredikat(st.tilawahScore)}</td></tr>
             </tbody>
           </table>
 
-          <div style="font-weight:bold; font-size:10.5pt; margin-top:8px;">D. HAFALAN ALQURAN</div>
-          <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-size: 10.5pt;">
-            <thead><tr style="background:#f1f5f9;"><th style="width:6%;">NO</th><th style="width:44%;">TARGET SURAT</th><th style="width:12%;">NILAI ANGKA</th><th style="width:28%;">NILAI HURUF</th><th style="width:10%;">KET</th></tr></thead>
+          <div style="font-weight:bold; font-size:9pt; margin-top:4px; margin-bottom:2px;">D. HAFALAN ALQURAN</div>
+          <table border="1" cellspacing="0" cellpadding="2" style="width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.15;">
+            <thead><tr style="background:#f1f5f9;"><th style="width:6%; padding:2px;">NO</th><th style="width:44%; padding:2px;">TARGET SURAT / JUZ</th><th style="width:12%; padding:2px;">NILAI ANGKA</th><th style="width:28%; padding:2px;">NILAI HURUF</th><th style="width:10%; padding:2px;">KET</th></tr></thead>
             <tbody>${tahfidzMultiRows}</tbody>
           </table>
 
-          <table style="width: 100%; margin-top: 24px; font-size: 10.5pt; border: none;">
+          <table style="width: 100%; margin-top: 14px; font-size: 9.5pt; border: none; border-collapse: collapse;">
             <tr>
-              <td style="width: 50%; text-align: center;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
-              <td style="width: 50%; text-align: center;"><br/>Ustadz/Ustadzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
+              <td style="width: 50%; text-align: center; vertical-align: top;">${cls.date}<br/>Wali Kelas<br/><br/><br/><strong>${cls.homeroom}</strong><br/>${cls.homeroomNbm ? 'NBM. ' + cls.homeroomNbm : ''}</td>
+              <td style="width: 50%; text-align: center; vertical-align: top;"><br/>Ustadz/Ustadzah<br/><br/><br/><strong>${teacher?.name || ''}</strong><br/>${teacher?.nbm ? 'NBM. ' + teacher.nbm : ''}</td>
             </tr>
           </table>
         </div>
@@ -1044,15 +1153,42 @@
       const teacher = db.teachers.find(t => t.id === state.teacherId);
       if (!st || !cls || !school) return;
 
-      document.getElementById('raporPreviewContainer').innerHTML = generateStudentRaporHTML(st, cls, school, teacher, type);
+      document.getElementById('raporPreviewContainer').innerHTML = generateStudentRaporHTML(st, cls, school, teacher, type, true);
     }
 
+    // =========================================================================
+    // EXPORT WORD (.DOC) DENGAN SETTING HALAMAN A4 MARGIN RAPAT (1 SISWA = 1 LEMBAR)
+    // =========================================================================
     function downloadDocFile(htmlBody, filename) {
       const fullHtml = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>Rapor</title></head>
-        <body>${htmlBody}</body></html>`;
-      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+        <head>
+          <meta charset='utf-8'>
+          <title>Rapor Ciri Khusus</title>
+          <!--[if gte mso 9]>
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+              <w:DoNotOptimizeForBrowser/>
+            </w:WordDocument>
+          </xml>
+          <![endif]-->
+          <style>
+            @page Section1 {
+              size: 21.0cm 29.7cm;
+              margin: 1.0cm 1.4cm 1.0cm 1.6cm;
+              mso-header-margin: 0.5cm;
+              mso-footer-margin: 0.5cm;
+              mso-paper-source: 0;
+            }
+            div.Section1 { page: Section1; }
+            body { font-family: 'Times New Roman', serif; margin: 0; padding: 0; }
+            table { border-collapse: collapse; }
+          </style>
+        </head>
+        <body><div class="Section1">${htmlBody}</div></body></html>`;
+      const blob = new Blob(['﻿', fullHtml], { type: 'application/msword' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1068,7 +1204,7 @@
       const cls = db.classes.find(c => c.id === state.classId);
       const school = db.schools.find(sc => sc.id === state.schoolId);
       const teacher = db.teachers.find(t => t.id === state.teacherId);
-      const html = generateStudentRaporHTML(st, cls, school, teacher, type);
+      const html = generateStudentRaporHTML(st, cls, school, teacher, type, true);
       downloadDocFile(html, `Rapor_${st.name.replace(/\s+/g, '_')}.doc`);
     }
 
@@ -1078,12 +1214,50 @@
       const school = db.schools.find(sc => sc.id === state.schoolId);
       const teacher = db.teachers.find(t => t.id === state.teacherId);
       const students = db.students.filter(s => s.classId === state.classId);
-      const combinedHtml = students.map(st => generateStudentRaporHTML(st, cls, school, teacher, type)).join('');
-      downloadDocFile(combinedHtml, `Rapor_Full_Kelas_${cls.name.replace(/\s+/g, '_')}.doc`);
+      const combinedHtml = students.map((st, idx) =>
+        generateStudentRaporHTML(st, cls, school, teacher, type, idx === students.length - 1)
+      ).join('');
+      downloadDocFile(combinedHtml, `Rapor_1_Kelas_${cls.name.replace(/\s+/g, '_')}.doc`);
     }
 
     // =========================================================================
-    // TAB 4: PENGATURAN & BACKUP JSON
+    // EXPORT PDF LANGSUNG (1 SISWA = 1 LEMBAR / 1 KELAS = N LEMBAR)
+    // =========================================================================
+    function printPdfSingle() {
+      const sid = parseInt(document.getElementById('selectStudentRapor').value, 10);
+      const type = document.getElementById('selectRaporType').value;
+      const st = db.students.find(s => s.id === sid);
+      const cls = db.classes.find(c => c.id === state.classId);
+      const school = db.schools.find(sc => sc.id === state.schoolId);
+      const teacher = db.teachers.find(t => t.id === state.teacherId);
+
+      const printArea = document.getElementById('print-area');
+      printArea.innerHTML = generateStudentRaporHTML(st, cls, school, teacher, type, true);
+      const oldTitle = document.title;
+      document.title = `Rapor_${st.name.replace(/\s+/g, '_')}`;
+      window.print();
+      document.title = oldTitle;
+    }
+
+    function printPdfAllClass() {
+      const type = document.getElementById('selectRaporType').value;
+      const cls = db.classes.find(c => c.id === state.classId);
+      const school = db.schools.find(sc => sc.id === state.schoolId);
+      const teacher = db.teachers.find(t => t.id === state.teacherId);
+      const students = db.students.filter(s => s.classId === state.classId);
+
+      const printArea = document.getElementById('print-area');
+      printArea.innerHTML = students.map((st, idx) =>
+        generateStudentRaporHTML(st, cls, school, teacher, type, idx === students.length - 1)
+      ).join('');
+      const oldTitle = document.title;
+      document.title = `Rapor_1_Kelas_${cls.name.replace(/\s+/g, '_')}`;
+      window.print();
+      document.title = oldTitle;
+    }
+
+    // =========================================================================
+    // TAB 4: PENGATURAN KOP SURAT, KEPALA SEKOLAH & BACKUP JSON
     // =========================================================================
     function renderSettings() {
       const container = document.getElementById('schoolSettingsList');
@@ -1091,14 +1265,24 @@
         <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
           <div class="text-xs font-extrabold text-emerald-900">${sc.name}</div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" value="${sc.principal}" onchange="updateSchoolPrincipal(${sc.id}, 'principal', this.value)" placeholder="Nama Kepala Sekolah" class="bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold" />
-            <input type="text" value="${sc.principalNbm}" onchange="updateSchoolPrincipal(${sc.id}, 'principalNbm', this.value)" placeholder="NBM Kepala Sekolah" class="bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs" />
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500">Nama Kepala Sekolah</label>
+              <input type="text" value="${sc.principal}" onchange="updateSchoolField(${sc.id}, 'principal', this.value)" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500">NBM Kepala Sekolah</label>
+              <input type="text" value="${sc.principalNbm}" onchange="updateSchoolField(${sc.id}, 'principalNbm', this.value)" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] font-bold text-slate-500">Alamat & Kontak Kop Surat</label>
+              <input type="text" value="${sc.address}" onchange="updateSchoolField(${sc.id}, 'address', this.value)" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs" />
+            </div>
           </div>
         </div>
       `).join('');
     }
 
-    function updateSchoolPrincipal(id, field, val) {
+    function updateSchoolField(id, field, val) {
       const sc = db.schools.find(s => s.id === id);
       if (sc) { sc[field] = val; saveDB(); renderRaporPreview(); }
     }
@@ -1176,56 +1360,6 @@
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
-    // Tarik data terbaru dari Google Sheets saat aplikasi dibuka
-async function syncFromGoogleSheets() {
-  if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
-  const badge = document.getElementById('modeBadge');
-  badge.textContent = 'Menyinkronkan Sheets...';
-  try {
-    const res = await fetch(APP_CONFIG.SHEETS_WEB_APP_URL);
-    const json = await res.json();
-    if (json.status === 'success') {
-      if (json.students && json.students.length > 0) {
-        db.students = json.students;
-        saveDB();
-        initSelectors();
-      } else {
-        // Jika Google Sheets masih kosong, kirim data awal (seeder) ke Sheets
-        await pushToGoogleSheets(db.students);
-      }
-      badge.textContent = 'Terhubung Google Sheets ✓';
-      badge.className = 'bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded';
-    }
-  } catch (err) {
-    badge.textContent = 'Offline (Lokal Cache)';
-  }
-}
-
-// Kirim data siswa ke Google Sheets setiap kali disimpan
-async function pushToGoogleSheets(studentsArray) {
-  if (!APP_CONFIG.USE_GOOGLE_SHEETS || !APP_CONFIG.SHEETS_WEB_APP_URL.startsWith('http')) return;
-  try {
-    await fetch(APP_CONFIG.SHEETS_WEB_APP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ students: studentsArray })
-    });
-  } catch (e) {
-    console.warn('Gagal mengirim ke Sheets, tersimpan di lokal:', e);
-  }
-}
-
-// Modifikasi saveDB agar otomatis mengirim ke Google Sheets
-const originalSaveDB = saveDB;
-saveDB = function() {
-  originalSaveDB();
-  pushToGoogleSheets(db.students);
-};
-
-// Jalankan sinkronisasi saat halaman dimuat
-syncFromGoogleSheets();
-    // Start App
     initSelectors();
   </script>
 </body>
