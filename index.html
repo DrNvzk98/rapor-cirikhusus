@@ -215,7 +215,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <label class="text-xs font-extrabold text-emerald-900 uppercase">Capaian Hafalan Al-Qur'an (Target Wajib & Surah/Juz Tambahan)</label>
-                <p class="text-[11px] text-slate-500">Bisa ditambah hingga 10+ surah/juz tambahan dalam 6 bulan; rapor otomatis merapatkan baris agar tetap 1 lembar A4.</p>
+                <p id="tahfidzInputHint" class="text-[11px] text-slate-500">Isi kolom Juz (untuk Program Tahfidz) dan nama surat/ayat beserta nilainya.</p>
               </div>
               <div class="flex gap-1.5">
                 <button type="button" onclick="addMultipleTahfidzRows(5)" class="bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-lg">
@@ -296,8 +296,8 @@
               <option value="icp_english">Student Learning Report (ICP English)</option>
             </select>
           </div>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-            ✓ Auto-Fit A4: 1 Siswa = 1 Lembar + Kop Resmi
+          <span id="raporFormatBadge" class="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+            Format Rapor Otomatis
           </span>
         </div>
 
@@ -345,13 +345,13 @@
 
       <!-- 2. MASTER KELAS & WALI KELAS -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">2. Master Kelas & Pengampu</h3>
+        <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">2. Master Kelas & Format Rapor</h3>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <input type="text" id="newClassName" placeholder="Nama Kelas (Mis: IV AR-RAHMAN)" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
           <select id="newClassProgram" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold">
-            <option value="Multi Talent">Program: Multi Talent</option>
-            <option value="Tahfidz">Program: Tahfidz (Khusus)</option>
-            <option value="ICP">Program: ICP</option>
+            <option value="Tahfidz">Program: Tahfidz (Format Urutan 1-4)</option>
+            <option value="Multi Talent">Program: Multi Talent (Format Urutan A-D)</option>
+            <option value="ICP">Program: ICP (Format A-D + English)</option>
           </select>
           <select id="newClassTeacherId" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold"></select>
           <input type="text" id="newClassHomeroom" placeholder="Nama Wali Kelas & Gelar..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs" />
@@ -362,12 +362,13 @@
         <div id="masterClassesList" class="divide-y divide-slate-100 text-xs pt-2"></div>
       </div>
 
-      <!-- 3. MASTER SISWA DI KELAS AKTIF -->
+      <!-- 3. MASTER TAMBAH SISWA DENGAN PILIHAN KELAS -->
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">3. Tambah Siswa ke Kelas Aktif</h3>
-        <div class="flex gap-2">
-          <input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
-          <button onclick="addNewStudent()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah Siswa</button>
+        <h3 class="font-bold text-sm text-emerald-900 border-b border-slate-100 pb-2">3. Tambah Siswa Baru (Pilih Kelas Tujuan)</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <select id="newStudentClassId" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-emerald-900"></select>
+          <input type="text" id="newStudentName" placeholder="Nama Lengkap Siswa..." class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
+          <button onclick="addNewStudent()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">+ Tambah ke Kelas</button>
         </div>
       </div>
 
@@ -438,7 +439,7 @@
     const APP_CONFIG = {
       USE_GOOGLE_SHEETS: false,
       SHEETS_WEB_APP_URL: '',
-      STORAGE_KEY: 'rapor_muh_temanggung_v3'
+      STORAGE_KEY: 'rapor_muh_temanggung_v4'
     };
 
     // =========================================================================
@@ -523,7 +524,7 @@
           }
         },
         {
-          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni (Contoh 10 Surah Tambahan)', ummiGrade: "Tilawah Al-Qur'an",
+          id: 301, schoolId: 1, classId: 3, name: 'Adistya Putri Nugraheni', ummiGrade: "Tilawah Al-Qur'an",
           tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 91, barab: 91, mulaqu: 95, extraMapels: {},
           doaList: [{ title: '1. Al Ma’tsurat', score: 98 }],
           tahfidzList: [
@@ -539,6 +540,16 @@
             { juzGroup: 'Juz 29', surah: '9. Al Qiyamah', score: 93 },
             { juzGroup: 'Juz 29', surah: '10. Al Insan', score: 95 }
           ],
+          icp: null
+        },
+        {
+          id: 302, schoolId: 1, classId: 3, name: 'Dervy Rahmandhita Refanda', ummiGrade: "Tilawah Al-Qur'an",
+          tilawahTarget: 'Q.S Thaha ayat 1-9', tilawahScore: 87, kemuh: 88, barab: 92, mulaqu: 95, extraMapels: {},
+          doaList: [
+            { title: '1. Al Ma’tsurat', score: 98 },
+            { title: '6. Larangan sombong', score: 95 }
+          ],
+          tahfidzList: [{ juzGroup: 'Juz 3', surah: '1. Q.S Al Baqarah 265', score: 85 }],
           icp: null
         },
         {
@@ -650,6 +661,10 @@
         reading: n >= 95 ? 'The student can read a text well. The student can recognize simple sentences. The student can answer yes/no questions correctly.' : 'The student can read a text clearly. The student can recognize sentences. The student can answer yes/no questions well.'
       };
       return map[skill];
+    }
+
+    function isTahfidzClass(cls) {
+      return cls && String(cls.program).trim().toLowerCase() === 'tahfidz';
     }
 
     // =========================================================================
@@ -867,13 +882,13 @@
 
     function addTahfidzRow(juzGroup = '', surah = '', score = '') {
       const cls = db.classes.find(c => c.id === state.classId);
-      const isTahfidzProgram = cls && cls.program === 'Tahfidz';
+      const showJuzCol = isTahfidzClass(cls);
       const div = document.createElement('div');
       div.className = 'flex flex-wrap sm:flex-nowrap items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 tahfidz-row';
       div.innerHTML = `
-        ${isTahfidzProgram ? `<input type="text" list="datalistJuz" placeholder="Juz (Mis: Juz 29)" value="${juzGroup}" class="w-28 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold inp-juz" />` : `<input type="hidden" value="${juzGroup}" class="inp-juz" />`}
+        ${showJuzCol ? `<input type="text" list="datalistJuz" placeholder="Juz (Mis: Juz 29)" value="${juzGroup}" class="w-28 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold inp-juz" />` : `<input type="hidden" value="${juzGroup}" class="inp-juz" />`}
         <input type="text" list="datalistSurah" placeholder="Pilih/Ketik Target Surat atau Juz (Mis: Al Mulk)" value="${surah}" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold inp-surah" />
-        <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-center inp-score" />
+        <input type="number" min="0" max="100" placeholder="Nilai" value="${score}" class="w-20 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-bold text-center inp-score" />
         <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:bg-rose-100 px-2 py-1 rounded text-xs font-bold">✕</button>
       `;
       document.getElementById('tahfidzRowsContainer').appendChild(div);
@@ -1130,8 +1145,9 @@
         `;
       }
 
-      // FORMAT 2: PROGRAM KHUSUS TAHFIDZ (1 TABEL UTAMA NOMOR 1-4, MENDUKUNG BANYAK JUZ/SURAH DALAM 1 LEMBAR)
-      if (cls.program === 'Tahfidz') {
+      // FORMAT KHUSUS PROGRAM TAHFIDZ:
+      // 1 TABEL UTAMA (1. Tilawah -> 2. Hafalan Al Qur'an per Juz -> 3. Do'a Harian & Hadits -> 4. Mapel Ciri Khusus)
+      if (isTahfidzClass(cls)) {
         const groupedJuz = {};
         (st.tahfidzList || []).forEach(t => {
           const g = t.juzGroup || 'Capaian Hafalan';
@@ -1232,7 +1248,8 @@
         `;
       }
 
-      // FORMAT 1: MULTI TALENT & ICP TAHFIDZ (4 BAGIAN A, B, C, D — AUTO-FIT 1 LEMBAR A4)
+      // FORMAT MULTI TALENT & ICP TAHFIDZ:
+      // 4 TABEL TERPISAH (A. Mapel Ciri Khusus -> B. Doa & Hadits -> C. Bacaan Al-Qur'an -> D. Hafalan Alquran)
       const mapelMultiRows = (db.masterData.mapelList || []).map((m, i) => {
         const val = getStudentMapelValue(st, m.key);
         const numVal = val === '' ? null : val;
@@ -1330,6 +1347,15 @@
       const teacher = db.teachers.find(t => t.id === state.teacherId);
       if (!st || !cls || !school) return;
 
+      const badge = document.getElementById('raporFormatBadge');
+      if (type === 'icp_english' && cls.program === 'ICP') {
+        badge.textContent = 'Format: ICP English Report (1 Lembar A4)';
+      } else if (isTahfidzClass(cls)) {
+        badge.textContent = 'Format Khusus Tahfidz: Tabel Tunggal 1–4 (Tilawah → Hafalan → Doa → Mapel)';
+      } else {
+        badge.textContent = 'Format Multi Talent / Reguler: 4 Tabel A–D (Mapel → Doa → Bacaan → Hafalan)';
+      }
+
       document.getElementById('raporPreviewContainer').innerHTML = generateStudentRaporHTML(st, cls, school, teacher, type, true);
     }
 
@@ -1421,7 +1447,7 @@
     }
 
     // =========================================================================
-    // TAB 4: MASTER ADMIN (GURU, KELAS, JUZ, SURAH, DOA, MAPEL, KOP SURAT)
+    // TAB 4: MASTER ADMIN (GURU, KELAS, SISWA PILIH KELAS, JUZ, SURAH, MAPEL)
     // =========================================================================
     function renderSettings() {
       const activeSchool = db.schools.find(s => s.id === state.schoolId);
@@ -1436,10 +1462,9 @@
         </div>
       `).join('');
 
-      // Populate dropdown guru di form tambah kelas
       document.getElementById('newClassTeacherId').innerHTML = teachersInSchool.map(t => `<option value="${t.id}">Pengampu: ${t.name}</option>`).join('');
 
-      // 2. Render Daftar Kelas di Sekolah Aktif
+      // 2. Render Daftar Kelas di Sekolah Aktif & Populate Dropdown Tambah Siswa
       const classesInSchool = db.classes.filter(c => c.schoolId === state.schoolId);
       document.getElementById('masterClassesList').innerHTML = classesInSchool.map(c => {
         const guru = db.teachers.find(t => t.id === c.teacherId);
@@ -1453,6 +1478,12 @@
           </div>
         `;
       }).join('');
+
+      const selNewStudentClass = document.getElementById('newStudentClassId');
+      selNewStudentClass.innerHTML = classesInSchool.map(c => `<option value="${c.id}">Kelas: ${c.name} (${c.program})</option>`).join('');
+      if (classesInSchool.some(c => c.id === state.classId)) {
+        selNewStudentClass.value = state.classId;
+      }
 
       // 4. Render Tags Bank Juz, Surah, Doa, Mapel
       document.getElementById('masterJuzTags').innerHTML = (db.masterData.juzList || []).map((j, idx) => `
@@ -1597,21 +1628,28 @@
 
     function addNewStudent() {
       const inp = document.getElementById('newStudentName');
+      const targetClassId = parseInt(document.getElementById('newStudentClassId').value, 10);
       const name = inp.value.trim();
-      if (!name) return;
+      if (!name) return alert('Masukkan nama siswa terlebih dahulu.');
+      const targetCls = db.classes.find(c => c.id === targetClassId);
+      if (!targetCls) return alert('Pilih kelas tujuan terlebih dahulu.');
+
       const newId = Date.now();
       db.students.push({
-        id: newId, schoolId: state.schoolId, classId: state.classId, name,
+        id: newId, schoolId: state.schoolId, classId: targetClassId, name,
         ummiGrade: 'Jilid 1', tilawahTarget: 'Tilawah', tilawahScore: null,
         kemuh: null, barab: null, mulaqu: null, extraMapels: {},
         doaList: [{ title: 'Al Ma’tsurat', score: 0 }],
-        tahfidzList: [{ juzGroup: '', surah: 'Juz 30', score: 0 }],
+        tahfidzList: [{ juzGroup: isTahfidzClass(targetCls) ? 'Juz 30' : '', surah: 'Juz 30', score: 0 }],
         icp: null
       });
       inp.value = '';
+      state.teacherId = targetCls.teacherId;
+      state.classId = targetClassId;
+      state.studentId = newId;
       saveDB();
       initSelectors();
-      alert(`✅ Siswa ${name} ditambahkan ke kelas!`);
+      alert(`✅ Siswa ${name} berhasil ditambahkan ke kelas ${targetCls.name}!`);
     }
 
     function downloadBackupJSON() {
